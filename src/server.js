@@ -6,6 +6,8 @@ const PORT = 3000;
 app.use(express.json());
 
 const userRoutes = require('./routes/userRoutes');
+const projectRoutes = require('./routes/projectRoutes');
+const taskRoutes = require('./routes/taskRoutes');
 
 // Conexión a MongoDB Atlas
 const MONGODB_URI = 'mongodb+srv://enabilescobar:Naxildo2099@cluster0.syzoc.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
@@ -19,6 +21,8 @@ mongoose.connect(MONGODB_URI, {
     .catch((error) => console.error('Error al conectar a MongoDB:', error));
 
 app.use('/api/users', userRoutes);
+app.use('/api/projects', projectRoutes);
+app.use('/api/tasks', taskRoutes);
 
 app.get('/', (req, res) => {
     res.send('Servidor funcionando correctamente!');

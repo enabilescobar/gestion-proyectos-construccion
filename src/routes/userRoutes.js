@@ -1,26 +1,25 @@
 const express = require('express');
 const router = express.Router();
-const User = require('../models/users'); 
+const User = require('../models/users');
 
 // Registrar un nuevo usuario
 router.post('/register', async (req, res) => {
-    const { username, password } = req.body;
+    const { username, password, email } = req.body;
 
     try {
-        // Buscar si el usuario ya existe
-        const { username, password } = req.body;
-        const existingUser = await User.findOne({ username });
+        // Verificar si ya existe un usuario con el mismo nombre o correo
+        const existingUser = await User.findOne({ $or: [{ username }, { email }] });
         if (existingUser) {
-            return res.status(400).send('El nombre de usuario ya está en uso.');
+            return res.status(400).json({ message: 'El nombre de usuario o correo ya está en uso.' });
         }
 
-        // Crear y guardar el nuevo usuario
-        const newUser = new User({ username, password });
+        // Crear nuevo usuario
+        const newUser = new User({ username, password, email });
         await newUser.save();
         res.status(201).json(newUser);
     } catch (error) {
-        console.error('Error al registrar el usuario:', error);
-        res.status(500).send('Error al registrar el usuario.');
+        console.error("Error al registrar el usuario:", error);
+        res.status(500).json({ message: 'Error al registrar el usuario', error });
     }
 });
 
@@ -29,16 +28,31 @@ router.post('/login', async (req, res) => {
     const { username, password } = req.body;
 
     try {
-        const { username, password } = req.body;
         const user = await User.findOne({ username });
+        
         if (!user || user.password !== password) {
-            return res.status(401).send('Credenciales inválidas.');
+            return res.status(401).json({ message: 'Credenciales inválidas.' });
         }
 
-        res.status(200).send('Inicio de sesión exitoso.');
+        res.status(200).json({ message: 'Inicio de sesión exitoso.' });
     } catch (error) {
-        console.error('Error al iniciar sesión:', error);
-        res.status(500).send('Error al iniciar sesión.');
+        console.error("Error al iniciar sesión:", error);
+        res.status(500).json({ message: 'Error al iniciar sesión', error });
+    }
+});
+
+
+// Obtener el _id de un usuario
+router.get('/getUserId/:username', async (req, res) => {
+    try {
+        const user = await User.findOne({ username: req.params.username });
+        if (!user) {
+            return res.status(404).json({ message: "Usuario no encontrado" });
+        }
+        res.json({ _id: user._id });
+    } catch (error) {
+        console.error("Error al obtener el _id del usuario", error);
+        res.status(500).json({ message: "Error en el servidor" });
     }
 });
 
