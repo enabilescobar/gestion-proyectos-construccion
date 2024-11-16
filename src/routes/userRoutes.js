@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const bcrypt = require('bcrypt');
 const User = require('../models/users');
 
 // Registrar un nuevo usuario
@@ -13,10 +14,13 @@ router.post('/register', async (req, res) => {
             return res.status(400).json({ message: 'El nombre de usuario o correo ya está en uso.' });
         }
 
-        // Crear nuevo usuario
-        const newUser = new User({ username, password, email });
+        // Encriptar la contraseña antes de guardar
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Crear nuevo usuario con la contraseña encriptada
+        const newUser = new User({ username, password: hashedPassword, email });
         await newUser.save();
-        res.status(201).json(newUser);
+        res.status(201).json({ message: 'Usuario registrado exitosamente', user: { username, email } });
     } catch (error) {
         console.error("Error al registrar el usuario:", error);
         res.status(500).json({ message: 'Error al registrar el usuario', error });
@@ -28,9 +32,15 @@ router.post('/login', async (req, res) => {
     const { username, password } = req.body;
 
     try {
+        //Buscar usuario por userName
         const user = await User.findOne({ username });
-        
-        if (!user || user.password !== password) {
+        if (!user) {
+            return res.status(401).json({ message: 'Credenciales inválidas.' });
+        }
+
+        // Verificar la contraseña encriptada
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
             return res.status(401).json({ message: 'Credenciales inválidas.' });
         }
 
@@ -38,21 +48,6 @@ router.post('/login', async (req, res) => {
     } catch (error) {
         console.error("Error al iniciar sesión:", error);
         res.status(500).json({ message: 'Error al iniciar sesión', error });
-    }
-});
-
-
-// Obtener el _id de un usuario
-router.get('/getUserId/:username', async (req, res) => {
-    try {
-        const user = await User.findOne({ username: req.params.username });
-        if (!user) {
-            return res.status(404).json({ message: "Usuario no encontrado" });
-        }
-        res.json({ _id: user._id });
-    } catch (error) {
-        console.error("Error al obtener el _id del usuario", error);
-        res.status(500).json({ message: "Error en el servidor" });
     }
 });
 

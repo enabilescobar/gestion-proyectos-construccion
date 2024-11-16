@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcrypt');
 
 const userSchema = new mongoose.Schema({
     username: {
@@ -22,12 +23,24 @@ const userSchema = new mongoose.Schema({
     },
     role: {
         type: String,
-        enum: ['user', 'admin', "manager"],
+        enum: ['user', 'admin', 'manager'],
         default: 'user'
     },
     isActive: {
         type: Boolean,
         default: true
+    }
+});
+
+// Middleware para encriptar la contraseña antes de guardar
+userSchema.pre('save', async function (next) {
+    if (!this.isModified('password')) return next();
+    try {
+        const salt = await bcrypt.genSalt(10);
+        this.password = await bcrypt.hash(this.password, salt);
+        next();
+    } catch (error) {
+        next(error);
     }
 });
 

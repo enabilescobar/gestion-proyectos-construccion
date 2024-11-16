@@ -2,26 +2,19 @@ const express = require('express');
 const Task = require('../models/tasks');
 const Project = require('../models/projects');
 const User = require('../models/users');
+const verificarRoles = require('../middleware/verificarRoles');
 const router = express.Router();
 
-// Crear una nueva tarea
-router.post('/', async (req, res) => {
+// Crear una nueva tarea (solo admin y manager)
+router.post('/', verificarRoles(['admin', 'manager']), async (req, res) => {
     try {
-        const { title, description, status, project, assignedTo, createdBy } = req.body;
+        const { title, description, status, project, assignedTo } = req.body;
 
-        // Verificar si el usuario tiene permisos (debe ser admin o manager)
-        const user = await User.findById(createdBy);
-        if (!user || !['admin', 'manager'].includes(user.role)) {
-            return res.status(403).json({ message: "Permiso denegado. Solo administradores o managers pueden crear tareas." });
-        }
-
-        // Verificar si el proyecto existe
         const existingProject = await Project.findById(project);
         if (!existingProject) {
             return res.status(404).json({ message: "Proyecto no encontrado" });
         }
 
-        // Crear la nueva tarea
         const newTask = new Task({
             title,
             description,
@@ -39,22 +32,47 @@ router.post('/', async (req, res) => {
 });
 
 // Obtener todas las tareas de un proyecto
-router.get('/:projectId', async (req, res) => {
+router.get('/proyecto/:projectId', async (req, res) => {
     try {
         const { projectId } = req.params;
-        
-        // Verificar si el proyecto existe
-        const existingProject = await Project.findById(projectId);
-        if (!existingProject) {
-            return res.status(404).json({ message: "Proyecto no encontrado" });
-        }
-
-        // Obtener las tareas asociadas al proyecto
         const tasks = await Task.find({ project: projectId }).populate('assignedTo', 'username email');
         res.status(200).json(tasks);
     } catch (error) {
         console.error("Error al obtener las tareas:", error);
         res.status(500).json({ message: "Error al obtener las tareas", error });
+    }
+});
+
+// Asignar un usuario a una tarea (solo admin y manager)
+router.put('/:id/asignar', verificarRoles(['admin', 'manager']), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { assignedTo } = req.body;
+
+        const user = await User.findById(assignedTo);
+        if (!user) {
+            return res.status(404).json({ message: "Usuario no encontrado" });
+        }
+
+        const task = await Task.findByIdAndUpdate(id, { assignedTo }, { new: true });
+        res.status(200).json(task);
+    } catch (error) {
+        console.error("Error al asignar la tarea", error);
+        res.status(500).json({ message: "Error al asignar la tarea", error });
+    }
+});
+
+// Actualizar el estado de una tarea
+router.put('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        const task = await Task.findByIdAndUpdate(id, { status }, { new: true });
+        res.status(200).json(task);
+    } catch (error) {
+        console.error("Error al actualizar la tarea", error);
+        res.status(500).json({ message: "Error al actualizar la tarea", error });
     }
 });
 
