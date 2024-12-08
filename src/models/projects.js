@@ -1,11 +1,8 @@
+// src/models/projects.js
 const mongoose = require('mongoose');
 
 const projectSchema = new mongoose.Schema({
-    nombreProyecto: {
-        type: String,
-        required: true,
-        trim: true
-    },
+    nombreProyecto: {type: String, required: true, trim: true},
     descripcion: {
         type: String,
         trim: true
@@ -19,8 +16,8 @@ const projectSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['No Iniciado', 'En Progreso', 'Completado'],
-        default: 'No Iniciado'
+        enum: ['Pendiente', 'En Progreso', 'Completado', 'En Proceso'],
+        default: 'Pendiente'
     },
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,

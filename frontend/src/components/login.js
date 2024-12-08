@@ -1,3 +1,4 @@
+// frontend/src/components/login.js
 import React, { useState } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -6,14 +7,10 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
 
-    // no funciono, revisar despues
-    // URL de la API desde la variable de entorno
-    //const API_URL = process.env.REACT_APP_API_URL || '';
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
-
+    
         try {
             const response = await fetch('http://localhost:5000/api/login', {
                 method: 'POST',
@@ -22,12 +19,13 @@ const Login = () => {
                 },
                 body: JSON.stringify({ email, password }),
             });
-
+    
             const data = await response.json();
+    
             if (response.ok) {
                 // Guardar token en almacenamiento local
-                localStorage.setItem('token', data.token);
-                console.log('Inicio de sesión exitoso');
+                localStorage.setItem('authToken', data.token);
+                console.log('Inicio de sesión exitoso. Token almacenado:', data.token);
                 // Redirigir al usuario
                 window.location.href = '/home';
             } else {
@@ -42,9 +40,17 @@ const Login = () => {
 
     return (
         <div className="container d-flex justify-content-center align-items-center vh-100">
+            
+            <h1 className="text-center mb-4" style={{ fontSize: '3rem', color: '#007bff' }}>
+                CONSTRUCCIONES 
+                "GUARDADO"
+            </h1>
+            
             <div className="card p-4 shadow" style={{ maxWidth: '400px', width: '100%' }}>
                 <h2 className="mb-4 text-center">Iniciar Sesión</h2>
+                
                 {error && <div className="alert alert-danger" role="alert">{error}</div>}
+                
                 <form onSubmit={handleSubmit}>
                     <div className="mb-3">
                         <label htmlFor="email" className="form-label">Correo Electrónico</label>

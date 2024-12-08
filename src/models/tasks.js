@@ -1,3 +1,4 @@
+// src/models/tasks.js
 const mongoose = require('mongoose');
 
 const taskSchema = new mongoose.Schema({
@@ -12,7 +13,7 @@ const taskSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Pendiente', 'En Progreso', 'Completado'],
+        enum: ['Pendiente', 'En Progreso', 'Completado', 'En Proceso'],
         default: 'Pendiente'
     },
     project: {
@@ -23,7 +24,13 @@ const taskSchema = new mongoose.Schema({
     assignedTo: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
-    }
+    },
+    startDate: { 
+        type: Date 
+    },
+    endDate: { 
+        type: Date 
+    },
 }, { timestamps: true });
 
 module.exports = mongoose.model('Task', taskSchema);
