@@ -6,7 +6,7 @@ import Navbar from './Navbar';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const RegistrarGasto = () => {
-    const { id } = useParams(); // ID del proyecto
+    const { id } = useParams(); 
     const navigate = useNavigate();
     const [gasto, setGasto] = useState({
         category: 'Materiales',

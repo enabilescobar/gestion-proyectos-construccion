@@ -1,7 +1,7 @@
 // frontend/src/components/Navbar.js
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { jwtDecode } from 'jwt-decode'; // Importamos como named import
+import { jwtDecode } from 'jwt-decode'; // Cambio: Importación corregida de jwtDecode
 
 const Navbar = () => {
     const navigate = useNavigate();
@@ -13,7 +13,7 @@ const Navbar = () => {
         if (token) {
             try {
                 const decodedToken = jwtDecode(token);
-                setUsername(decodedToken.username || 'Usuario'); // Ajusta "username" según cómo esté almacenado en el token
+                setUsername(decodedToken.username || 'Usuario'); // Cambio: Decodificación de username
             } catch (error) {
                 console.error('Error al decodificar el token:', error);
             }
@@ -26,7 +26,7 @@ const Navbar = () => {
     };
 
     const handleChangePassword = () => {
-        navigate('/CambiarPassword');
+        navigate('/CambiarPassword'); // Redirección para cambiar contraseña del usuario autenticado
     };
 
     const handleHome = () => {

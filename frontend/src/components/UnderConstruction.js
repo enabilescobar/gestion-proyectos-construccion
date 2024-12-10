@@ -1,7 +1,7 @@
 // frontend/src/components/UnderConstruction.js
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navbar from './Navbar'; // Reutilizamos la barra de navegación
+import Navbar from './Navbar'; 
 
 const UnderConstruction = () => {
     const navigate = useNavigate();

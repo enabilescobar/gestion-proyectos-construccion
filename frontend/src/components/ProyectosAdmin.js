@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import Navbar from './Navbar'; // Barra de navegación
+import Navbar from './Navbar'; 
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const ProyectosAdmin = () => {
@@ -12,7 +12,7 @@ const ProyectosAdmin = () => {
     const [message, setMessage] = useState('');
     const navigate = useNavigate();
 
-    // Función para obtener proyectos del backend
+    // Obtener proyectos
     const fetchProyectos = async () => {
         setLoading(true);
         try {
@@ -24,7 +24,7 @@ const ProyectosAdmin = () => {
 
             const response = await axios.get('http://localhost:5000/api/projects', {
                 headers: {
-                    Authorization: `Bearer ${token}`, // Pasar el token en los headers
+                    Authorization: `Bearer ${token}`,
                 },
             });
 
@@ -39,7 +39,7 @@ const ProyectosAdmin = () => {
         }
     };
 
-    // Llamar a la función de obtener proyectos al cargar la página
+    // Obtener proyectos al cargar
     useEffect(() => {
         fetchProyectos();
     }, []);

@@ -16,6 +16,7 @@ import EditarGasto from './components/EditarGasto';
 import AdministrarUsuarios from './components/AdministrarUsuarios';
 import CrearUsuario from './components/CrearUsuario';
 import CambiarPassword from './components/CambiarPassword';
+import CambiarPasswordAdmin from './components/CambiarPasswordAdmin';
 import UnderConstruction from './components/UnderConstruction';
 import './App.css';
 
@@ -63,8 +64,11 @@ function App() {
                     {/* Ruta para Crear Usuarios */}
                     <Route path="/CrearUsuario" element={<CrearUsuario />} />
 
-                    {/* Ruta para Cambiar Password */}
+                    {/* Ruta para Cambiar Password usuario autenticado actualmente*/}
                     <Route path="/CambiarPassword" element={<CambiarPassword />} />
+
+                    {/* Ruta para Cambiar Password página de admin */}
+                    <Route path="/CambiarPasswordAdmin/:userId" element={<CambiarPasswordAdmin />} /> 
 
                     {/* Ruta para Pagina en construccion */}
                     <Route path="/en-construccion" element={<UnderConstruction />} />

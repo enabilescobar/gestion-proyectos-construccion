@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import Navbar from './Navbar'; // Barra de navegación
+import Navbar from './Navbar'; 
 import { Modal, Button } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
@@ -42,7 +42,7 @@ const VerProyectos = () => {
             });
             setMessage(`Proyecto "${selectedProject.nombreProyecto}" eliminado con éxito.`);
             setShowDeleteModal(false);
-            fetchProjects(); // Actualizar la lista
+            fetchProjects();
         } catch (error) {
             console.error('Error al eliminar el proyecto:', error);
             setMessage('Error al eliminar el proyecto.');

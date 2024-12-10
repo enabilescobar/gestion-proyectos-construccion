@@ -3,8 +3,8 @@ const express = require('express');
 const Task = require('../models/tasks');
 const Project = require('../models/projects');
 const User = require('../models/users');
-const authenticate = require('../middleware/authenticate'); // Para asegurar que el usuario esté autenticado
-const authorize = require('../middleware/auth'); // Para verificar roles
+const authenticate = require('../middleware/authenticate'); 
+const authorize = require('../middleware/auth'); 
 const router = express.Router();
 
 // Crear una nueva tarea (solo admin y manager)

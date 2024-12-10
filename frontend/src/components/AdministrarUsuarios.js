@@ -1,4 +1,4 @@
-// frontend/src/components/AdministrarUsuario.js
+// frontend/src/components/AdministrarUsuarios.js
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Navbar from './Navbar';
@@ -50,6 +50,11 @@ const AdministrarUsuarios = () => {
         }
     };
 
+    // Cambio: Nueva función para manejar redirección al cambio de contraseña
+    const handleChangePassword = (userId) => {
+        navigate(`/CambiarPasswordAdmin/${userId}`);
+    };
+
     return (
         <div>
             <Navbar />
@@ -81,7 +86,12 @@ const AdministrarUsuarios = () => {
                                     <Button variant="danger" size="sm" onClick={() => handleDeleteUser(user)}>
                                         Eliminar
                                     </Button>{' '}
-                                    <Button variant="secondary" size="sm">
+                                    {/* Cambio: Botón funcional para cambiar contraseña */}
+                                    <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        onClick={() => handleChangePassword(user._id)}
+                                    >
                                         Cambiar Contraseña
                                     </Button>
                                 </td>
@@ -89,7 +99,6 @@ const AdministrarUsuarios = () => {
                         ))}
                     </tbody>
                 </table>
-
                 <Button
                     variant="success"
                     className="mb-3"
@@ -104,8 +113,6 @@ const AdministrarUsuarios = () => {
                 >
                     Regresar
                 </Button>
-
-
 
                 {/* Modal de Confirmación para Eliminar */}
                 <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>

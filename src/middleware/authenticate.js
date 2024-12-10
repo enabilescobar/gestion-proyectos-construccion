@@ -9,10 +9,10 @@ const authenticate = (req, res, next) => {
     }
 
     try {
-        const decoded = jwt.verify(token, process.env.SECRET_KEY); // Verificar el token
-        req.user = decoded; // Agregar los datos del usuario autenticado al objeto req
+        const decoded = jwt.verify(token, process.env.SECRET_KEY); 
+        req.user = decoded; 
         console.log('Usuario autenticado:', req.user);
-        next(); // Continuar con la siguiente función
+        next(); 
     } catch (error) {
         console.error('Error al autenticar el token:', error);
         res.status(401).json({ message: 'Token no válido' });

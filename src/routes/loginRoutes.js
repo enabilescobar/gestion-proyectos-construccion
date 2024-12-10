@@ -6,13 +6,13 @@ const User = require('../models/users');
 const router = express.Router();
 require('dotenv').config();
 
-const SECRET_KEY = process.env.SECRET_KEY; // Asegúrate de que está definida
+const SECRET_KEY = process.env.SECRET_KEY; 
 
 router.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
     try {
-        console.log('Cuerpo recibido:', req.body); // Verificar datos de entrada
+        console.log('Cuerpo recibido:', req.body); 
 
         // Buscar usuario por email
         const user = await User.findOne({ email });
@@ -65,7 +65,7 @@ router.get('/test-jwt', (req, res) => {
 
     try {
         const token = jwt.sign(testPayload, process.env.SECRET_KEY, { expiresIn: '1h' });
-        console.log('Token generado:', token); // Verificar token en logs
+        console.log('Token generado:', token); 
         res.status(200).json({ token });
     } catch (error) {
         console.error('Error al generar el token:', error);

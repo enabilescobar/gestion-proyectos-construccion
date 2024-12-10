@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Table, Button } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
-import Navbar from './Navbar'; // Navbar importada
+import Navbar from './Navbar'; 
 
 const ProyectoDetails = () => {
     const [project, setProject] = useState(null);
@@ -13,7 +13,7 @@ const ProyectoDetails = () => {
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState('');
     const navigate = useNavigate();
-    const { id } = useParams(); // Obtenemos el id del proyecto desde la URL
+    const { id } = useParams(); 
 
     useEffect(() => {
         fetchProjectDetails();

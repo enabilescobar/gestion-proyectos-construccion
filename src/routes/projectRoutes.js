@@ -1,15 +1,14 @@
 // src/routes/projectRoutes.js
-quire('express');
+const express = require('express');
 const Project = require('../models/projects');
-const Task = require('../models/tasks'); // Importar el modelo de tareas
-const Gasto = require('../models/gastos'); // Importar el modelo de gastos
+const Task = require('../models/tasks'); 
+const Gasto = require('../models/gastos'); 
 const authorize = require('../middleware/auth');
-const authenticate = require('../middleware/authenticate'); // Para asegurar que el usuario esté autenticado
+const authenticate = require('../middleware/authenticate'); 
 const router = express.Router();
 
-/**
- * Crear un nuevo proyecto
- */
+
+// Crear un nuevo proyecto
 router.post('/', authenticate, authorize(['admin', 'manager']), async (req, res) => {
     try {
         const { nombreProyecto, descripcion, fechaInicio, fechaFin } = req.body;
@@ -26,7 +25,7 @@ router.post('/', authenticate, authorize(['admin', 'manager']), async (req, res)
             descripcion,
             fechaInicio,
             fechaFin,
-            status: 'Pendiente', // Estado inicial
+            status: 'Pendiente', 
             createdBy,
         });
 
@@ -38,14 +37,12 @@ router.post('/', authenticate, authorize(['admin', 'manager']), async (req, res)
     }
 });
 
-/**
- * Obtener todos los proyectos (opcionalmente filtrar por estado o creador)
- */
+// Obtener todos los proyectos
 router.get('/', authenticate, authorize(['admin', 'manager']), async (req, res) => {
     try {
         const { status, createdBy } = req.query;
 
-        // Construir el filtro dinámico
+        // Construir el filtro dinámico en el futuro
         const filter = {};
         if (status) filter.status = status;
         if (createdBy) filter.createdBy = createdBy;
@@ -58,9 +55,7 @@ router.get('/', authenticate, authorize(['admin', 'manager']), async (req, res) 
     }
 });
 
-/**
- * Obtener un proyecto por ID
- */
+// Obtener un proyecto por ID
 router.get('/:id', authenticate, authorize(['admin', 'manager']), async (req, res) => {
     try {
         const project = await Project.findById(req.params.id).populate('createdBy', 'username email');
@@ -74,9 +69,7 @@ router.get('/:id', authenticate, authorize(['admin', 'manager']), async (req, re
     }
 });
 
-/**
- * Actualizar un proyecto
- */
+// Actualizar un proyecto
 router.put('/:id', authenticate, authorize(['admin', 'manager']), async (req, res) => {
     try {
         const { nombreProyecto, descripcion, fechaInicio, fechaFin, status } = req.body;
@@ -103,9 +96,7 @@ router.put('/:id', authenticate, authorize(['admin', 'manager']), async (req, re
     }
 });
 
-/**
- * Eliminar un proyecto y sus tareas relacionadas
- */
+// Eliminar un proyecto y sus tareas relacionadas
 router.delete('/:id', authenticate, authorize(['admin']), async (req, res) => {
     try {
         const projectId = req.params.id;
@@ -114,7 +105,7 @@ router.delete('/:id', authenticate, authorize(['admin']), async (req, res) => {
         await Task.deleteMany({ project: projectId });
 
         // Eliminar todos los gastos relacionados con el proyecto
-        await Gasto.deleteMany({ proyecto: projectId });
+        await Gasto.deleteMany({ project: projectId });
 
         // Eliminar el proyecto
         const deletedProject = await Project.findByIdAndDelete(projectId);
