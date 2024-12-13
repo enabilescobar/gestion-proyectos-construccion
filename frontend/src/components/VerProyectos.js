@@ -53,7 +53,7 @@ const VerProyectos = () => {
         <div>
             <Navbar />
             <div className="container mt-5">
-                <h2 className="text-center mb-4">Listado de Proyectos</h2>
+                <h2 className="text-center mb-4">Administracion de Proyectos</h2>
                 {message && <div className="alert alert-info">{message}</div>}
 
                 <table className="table table-bordered">
@@ -90,7 +90,14 @@ const VerProyectos = () => {
                     </tbody>
                 </table>
 
-                <div className="mb-4 d-flex justify-content-end">
+                <div className="mb-4 d-flex justify-content-between">
+                    <button
+                        className="btn btn-primary"
+                        onClick={() => navigate('/proyectos/agregar')}
+                    >
+                        Agregar Proyecto
+                    </button>
+
                     <button className="btn btn-outline-dark" onClick={() => navigate('/proyectos-admin')}>
                         Regresar
                     </button>

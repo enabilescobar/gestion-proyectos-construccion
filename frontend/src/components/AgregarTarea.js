@@ -1,5 +1,5 @@
 // frontend/src/components/AgregarTarea.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
@@ -15,10 +15,49 @@ const AgregarTarea = () => {
         startDate: '',
         endDate: '',
     });
+    const [projectDates, setProjectDates] = useState({ start: '', end: '' }); // Fechas del proyecto
     const [message, setMessage] = useState('');
+
+    // Obtener las fechas del proyecto al cargar la página
+    useEffect(() => {
+        const fetchProjectDates = async () => {
+            try {
+                const token = localStorage.getItem('authToken');
+                const response = await axios.get(`http://localhost:5000/api/projects/${id}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+
+                const { fechaInicio, fechaFin } = response.data;
+                setProjectDates({ start: fechaInicio, end: fechaFin });
+            } catch (error) {
+                console.error('Error al obtener las fechas del proyecto:', error);
+                setMessage('Error al cargar las fechas del proyecto.');
+            }
+        };
+
+        fetchProjectDates();
+    }, [id]);
 
     const handleAddTarea = async (e) => {
         e.preventDefault();
+        setMessage('');
+
+        // Validar fechas en el frontend
+        const taskStart = new Date(tarea.startDate);
+        const taskEnd = tarea.endDate ? new Date(tarea.endDate) : null;
+        const projectStart = new Date(projectDates.start);
+        const projectEnd = new Date(projectDates.end);
+
+        if (taskStart < projectStart || (taskEnd && taskEnd > projectEnd)) {
+            setMessage('Las fechas de la tarea deben estar dentro del intervalo del proyecto.');
+            return;
+        }
+
+        if (taskEnd && taskStart > taskEnd) {
+            setMessage('La fecha de inicio debe ser anterior o igual a la fecha de finalización.');
+            return;
+        }
+
         try {
             const token = localStorage.getItem('authToken');
             await axios.post('http://localhost:5000/api/tasks', { ...tarea, project: id }, {

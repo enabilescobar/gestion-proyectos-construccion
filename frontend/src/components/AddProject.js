@@ -15,6 +15,13 @@ const AddProject = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setMessage('');
+
+        // Validación en el frontend: Fecha de inicio debe ser anterior a la fecha de fin
+        if (fechaFin && new Date(fechaInicio) >= new Date(fechaFin)) {
+            setMessage('La fecha de inicio debe ser anterior a la fecha de fin.');
+            return;
+        }
+
         try {
             const token = localStorage.getItem('authToken');
             if (!token) {
@@ -34,7 +41,7 @@ const AddProject = () => {
 
             setMessage('Proyecto creado con éxito');
             console.log('Proyecto creado:', response.data);
-            setTimeout(() => navigate('/proyectos-admin'), 2000);
+            setTimeout(() => navigate('/proyectos'), 2000);
         } catch (error) {
             console.error('Error al crear el proyecto:', error);
             const errorMessage = error.response?.data?.message || 'Error al crear el proyecto';

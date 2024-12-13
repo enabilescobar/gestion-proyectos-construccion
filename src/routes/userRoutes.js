@@ -59,7 +59,7 @@ router.put('/:id/change-password', authenticate, authorize(['admin']), async (re
 });
 
 // Registrar un nuevo usuario
-router.post('/register', authenticate, authorize(['admin']), async (req, res) => {
+router.post('/register', authenticate, authorize(['admin', 'manager']), async (req, res) => {
     const { username, password, email, role, isActive } = req.body;
 
     try {
@@ -69,7 +69,7 @@ router.post('/register', authenticate, authorize(['admin']), async (req, res) =>
             return res.status(400).json({ message: 'El nombre de usuario o correo ya está en uso.' });
         }
 
-        // Generar el hash con bcrypt (deja que bcrypt maneje el prefijo automáticamente)
+        // Generar el hash con bcrypt
         const saltRounds = 12;
         const hashedPassword = await bcrypt.hash(password, saltRounds);
 

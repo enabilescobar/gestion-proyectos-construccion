@@ -31,7 +31,7 @@ router.post('/', authenticate, authorize(['admin', 'manager']), async (req, res)
     }
 });
 
-router.get('/project/:projectId', authenticate, authorize(['admin', 'manager']), async (req, res) => {
+router.get('/project/:projectId', authenticate, authorize(['admin', 'manager', 'user']), async (req, res) => {
     try {
         const { projectId } = req.params;
         const gastos = await Gasto.find({ project: projectId }).populate('addedBy', 'username email');
@@ -79,7 +79,7 @@ router.delete('/:id', authenticate, authorize(['admin']), async (req, res) => {
 });
 
 // Obtener un gasto específico por ID
-router.get('/:id', authenticate, authorize(['admin', 'manager']), async (req, res) => {
+router.get('/:id', authenticate, authorize(['admin', 'manager', 'user']), async (req, res) => {
     try {
         const gasto = await Gasto.findById(req.params.id).populate('addedBy', 'username email');
         if (!gasto) {

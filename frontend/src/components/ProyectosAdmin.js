@@ -4,12 +4,14 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Navbar from './Navbar'; 
 import 'bootstrap/dist/css/bootstrap.min.css';
+import { jwtDecode } from 'jwt-decode';
 
 const ProyectosAdmin = () => {
     const [proyectosPendientes, setProyectosPendientes] = useState([]);
     const [proyectosEnProceso, setProyectosEnProceso] = useState([]);
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState('');
+    const [userRole, setUserRole] = useState(''); 
     const navigate = useNavigate();
 
     // Obtener proyectos
@@ -39,9 +41,22 @@ const ProyectosAdmin = () => {
         }
     };
 
-    // Obtener proyectos al cargar
+    // Obtener rol del usuario autenticado
+    const fetchUserRole = () => {
+        const token = localStorage.getItem('authToken');
+        if (token) {
+            try {
+                const decodedToken = jwtDecode(token);
+                setUserRole(decodedToken.role);
+            } catch (error) {
+                console.error('Error al decodificar el token:', error);
+            }
+        }
+    };
+
     useEffect(() => {
         fetchProyectos();
+        fetchUserRole();
     }, []);
 
     const handleVerProyecto = (id) => {
@@ -56,7 +71,7 @@ const ProyectosAdmin = () => {
         <div>
             <Navbar />
             <div className="container mt-4">
-                <h2 className="text-center mb-4">Administración de Proyectos</h2>
+                <h2 className="text-center mb-4">Proyectos en Curso</h2>
                 {message && <div className="alert alert-info">{message}</div>}
 
                 {/* Proyectos en Proceso */}
@@ -87,7 +102,7 @@ const ProyectosAdmin = () => {
                                                 className="btn btn-info"
                                                 onClick={() => handleVerProyecto(proyecto._id)}
                                             >
-                                                Ver Proyecto
+                                                Ver Detalles
                                             </button>
                                         </td>
                                     </tr>
@@ -131,7 +146,7 @@ const ProyectosAdmin = () => {
                                                 className="btn btn-info"
                                                 onClick={() => handleVerProyecto(proyecto._id)}
                                             >
-                                                Ver Proyecto
+                                                Ver Detalles
                                             </button>
                                         </td>
                                     </tr>
@@ -149,18 +164,15 @@ const ProyectosAdmin = () => {
 
                 {/* Botones de acciones */}
                 <div className="mb-4 d-flex justify-content-between">
-                    <button
-                        className="btn btn-primary"
-                        onClick={() => navigate('/proyectos/agregar')}
-                    >
-                        Agregar Proyecto
-                    </button>
-                    <button
-                        className="btn btn-secondary"
-                        onClick={() => navigate('/proyectos')}
-                    >
-                        Ver Proyectos
-                    </button>
+                    {/* Mostrar el botón "Administrar Proyectos" solo si el usuario no es "user" */}
+                    {userRole !== 'user' && (
+                        <button
+                            className="btn btn-secondary"
+                            onClick={() => navigate('/proyectos')}
+                        >
+                            Administrar Proyectos
+                        </button>
+                    )}
                     <button
                         className="btn btn-outline-dark"
                         onClick={handleRegresar}

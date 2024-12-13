@@ -7,7 +7,6 @@ const authorize = require('../middleware/auth');
 const authenticate = require('../middleware/authenticate'); 
 const router = express.Router();
 
-
 // Crear un nuevo proyecto
 router.post('/', authenticate, authorize(['admin', 'manager']), async (req, res) => {
     try {
@@ -16,6 +15,11 @@ router.post('/', authenticate, authorize(['admin', 'manager']), async (req, res)
         // Validar los datos recibidos
         if (!nombreProyecto || !fechaInicio) {
             return res.status(400).json({ message: 'Nombre del proyecto y fecha de inicio son obligatorios' });
+        }
+
+        // Validar que la fecha de inicio sea anterior a la fecha de fin
+        if (fechaFin && new Date(fechaInicio) >= new Date(fechaFin)) {
+            return res.status(400).json({ message: 'La fecha de inicio debe ser anterior a la fecha de fin.' });
         }
 
         const createdBy = req.user.id; // Usuario autenticado
@@ -38,7 +42,7 @@ router.post('/', authenticate, authorize(['admin', 'manager']), async (req, res)
 });
 
 // Obtener todos los proyectos
-router.get('/', authenticate, authorize(['admin', 'manager']), async (req, res) => {
+router.get('/', authenticate, authorize(['admin', 'manager', 'user']), async (req, res) => {
     try {
         const { status, createdBy } = req.query;
 
@@ -56,7 +60,7 @@ router.get('/', authenticate, authorize(['admin', 'manager']), async (req, res) 
 });
 
 // Obtener un proyecto por ID
-router.get('/:id', authenticate, authorize(['admin', 'manager']), async (req, res) => {
+router.get('/:id', authenticate, authorize(['admin', 'manager', 'user']), async (req, res) => {
     try {
         const project = await Project.findById(req.params.id).populate('createdBy', 'username email');
         if (!project) {
@@ -77,6 +81,11 @@ router.put('/:id', authenticate, authorize(['admin', 'manager']), async (req, re
         // Validar los datos recibidos
         if (!nombreProyecto || !fechaInicio) {
             return res.status(400).json({ message: 'Nombre del proyecto y fecha de inicio son obligatorios' });
+        }
+
+        // Validar que la fecha de inicio sea anterior a la fecha de fin
+        if (fechaFin && new Date(fechaInicio) >= new Date(fechaFin)) {
+            return res.status(400).json({ message: 'La fecha de inicio debe ser anterior a la fecha de fin.' });
         }
 
         const updatedProject = await Project.findByIdAndUpdate(

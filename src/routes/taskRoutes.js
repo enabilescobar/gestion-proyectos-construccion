@@ -18,6 +18,23 @@ router.post('/', authenticate, authorize(['admin', 'manager']), async (req, res)
             return res.status(404).json({ message: "Proyecto no encontrado" });
         }
 
+        // Validar que las fechas de la tarea estén dentro del rango del proyecto
+        const projectStart = new Date(existingProject.fechaInicio);
+        const projectEnd = new Date(existingProject.fechaFin);
+        const taskStart = new Date(startDate);
+        const taskEnd = endDate ? new Date(endDate) : null;
+
+        if (taskStart < projectStart || (taskEnd && taskEnd > projectEnd)) {
+            return res.status(400).json({
+                message: "Las fechas de la tarea deben estar dentro del intervalo del proyecto.",
+            });
+        }
+
+        // Validar que la fecha de inicio sea anterior o igual a la fecha de fin
+        if (taskEnd && taskStart > taskEnd) {
+            return res.status(400).json({ message: "La fecha de inicio debe ser anterior o igual a la fecha de fin." });
+        }
+
         // Crear nueva tarea
         const newTask = new Task({
             title,
@@ -68,19 +85,45 @@ router.get('/:id', authenticate, authorize(['admin', 'manager', 'user']), async 
 router.put('/:id', authenticate, authorize(['admin', 'manager']), async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, description, status, startDate, endDate, assignedTo } = req.body;
+        const { title, description, status, startDate, endDate, assignedTo, project } = req.body;
 
-        const task = await Task.findByIdAndUpdate(
+        // Verificar que la tarea exista
+        const existingTask = await Task.findById(id);
+        if (!existingTask) {
+            return res.status(404).json({ message: "Tarea no encontrada" });
+        }
+
+        // Verificar que el proyecto exista
+        const existingProject = await Project.findById(project || existingTask.project);
+        if (!existingProject) {
+            return res.status(404).json({ message: "Proyecto no encontrado" });
+        }
+
+        // Validar que las fechas de la tarea estén dentro del rango del proyecto
+        const projectStart = new Date(existingProject.fechaInicio);
+        const projectEnd = new Date(existingProject.fechaFin);
+        const taskStart = new Date(startDate);
+        const taskEnd = endDate ? new Date(endDate) : null;
+
+        if (taskStart < projectStart || (taskEnd && taskEnd > projectEnd)) {
+            return res.status(400).json({
+                message: "Las fechas de la tarea deben estar dentro del intervalo del proyecto.",
+            });
+        }
+
+        // Validar que la fecha de inicio sea anterior o igual a la fecha de fin
+        if (taskEnd && taskStart > taskEnd) {
+            return res.status(400).json({ message: "La fecha de inicio debe ser anterior o igual a la fecha de fin." });
+        }
+
+        // Actualizar la tarea
+        const updatedTask = await Task.findByIdAndUpdate(
             id,
             { title, description, status, startDate, endDate, assignedTo },
             { new: true }
         );
 
-        if (!task) {
-            return res.status(404).json({ message: "Tarea no encontrada" });
-        }
-
-        res.status(200).json({ message: "Tarea actualizada con éxito", task });
+        res.status(200).json({ message: "Tarea actualizada con éxito", task: updatedTask });
     } catch (error) {
         console.error("Error al actualizar la tarea:", error);
         res.status(500).json({ message: "Error al actualizar la tarea", error });

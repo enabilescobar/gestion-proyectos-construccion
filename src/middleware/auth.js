@@ -7,7 +7,7 @@ const authorize = (roles) => {
             const userRole = req.user?.role; 
             if (!userRole || !roles.includes(userRole)) {
                 console.log('Permiso denegado: Rol insuficiente');
-                return res.status(403).json({ message: "Permisos insuficientes 1" });
+                return res.status(403).json({ message: "Permisos insuficientes" });
             }
             next(); 
         } catch (error) {
