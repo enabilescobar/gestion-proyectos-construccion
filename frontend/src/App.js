@@ -1,6 +1,7 @@
 // frontend/src/App.js
 import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import Layout from './components/Layout'; // Importar Layout
 import Login from './components/login';
 import Home from './components/Home';
 import ProyectosAdmin from './components/ProyectosAdmin';
@@ -18,7 +19,9 @@ import CrearUsuario from './components/CrearUsuario';
 import CambiarPassword from './components/CambiarPassword';
 import CambiarPasswordAdmin from './components/CambiarPasswordAdmin';
 import UnderConstruction from './components/UnderConstruction';
+import 'bootstrap/dist/css/bootstrap.min.css'; // Esto es necesario para que las clases de Bootstrap funcionen
 import './App.css';
+import Sidebar from './components/Sidebar';
 
 function App() {
     return (
@@ -29,46 +32,46 @@ function App() {
                     <Route path="/login" element={<Login />} />
 
                     {/* Ruta para la página de inicio */}
-                    <Route path="/home" element={<PrivateRoute><Home /></PrivateRoute>} />
+                    <Route path="/home" element={<PrivateRoute><Layout><Home /></Layout></PrivateRoute>} />
 
                     {/* Ruta para la página de administración de proyectos */}
-                    <Route path="/proyectos-admin" element={<PrivateRoute><ProyectosAdmin /></PrivateRoute>} />
+                    <Route path="/proyectos-admin" element={<PrivateRoute><Layout><ProyectosAdmin /></Layout></PrivateRoute>} />
 
                     {/* Ruta para los detalles de un proyecto */}
-                    <Route path="/proyectos/:id" element={<PrivateRoute><ProyectoDetails /></PrivateRoute>} />
+                    <Route path="/proyectos/:id" element={<PrivateRoute><Layout><ProyectoDetails /></Layout></PrivateRoute>} />
 
                     {/* Ruta para agregar un nuevo proyecto */}
-                    <Route path="/proyectos/agregar" element={<PrivateRoute><AddProject /></PrivateRoute>} />
+                    <Route path="/proyectos/agregar" element={<PrivateRoute><Layout><AddProject /></Layout></PrivateRoute>} />
 
                     {/* Ruta para ver todos los proyectos */}
-                    <Route path="/proyectos" element={<PrivateRoute><VerProyectos /></PrivateRoute>} />
+                    <Route path="/proyectos" element={<PrivateRoute><Layout><VerProyectos /></Layout></PrivateRoute>} />
 
                     {/* Ruta para editar los proyectos */}
-                    <Route path="/proyectos/:id/editar" element={<PrivateRoute><EditarProyecto /></PrivateRoute>} />
+                    <Route path="/proyectos/:id/editar" element={<PrivateRoute><Layout><EditarProyecto /></Layout></PrivateRoute>} />
 
                     {/* Ruta para agregar tareas */}
-                    <Route path="/proyectos/:id/agregar-tarea" element={<PrivateRoute><AgregarTarea /></PrivateRoute>} />
+                    <Route path="/proyectos/:id/agregar-tarea" element={<PrivateRoute><Layout><AgregarTarea /></Layout></PrivateRoute>} />
 
                     {/* Ruta para registrar gastos */}
-                    <Route path="/proyectos/:id/agregar-gasto" element={<PrivateRoute><RegistrarGasto /></PrivateRoute>} />
+                    <Route path="/proyectos/:id/agregar-gasto" element={<PrivateRoute><Layout><RegistrarGasto /></Layout></PrivateRoute>} />
 
                     {/* Ruta para editar tarea */}
-                    <Route path="/proyectos/:id/editar-tarea/:taskId" element={<EditarTarea />} />
+                    <Route path="/proyectos/:id/editar-tarea/:taskId" element={<Layout><EditarTarea /></Layout>} />
 
                     {/* Ruta para editar gastos */}
-                    <Route path="/proyectos/:id/editar-gasto/:gastoId" element={<EditarGasto />} />
+                    <Route path="/proyectos/:id/editar-gasto/:gastoId" element={<Layout><EditarGasto /></Layout>} />
 
                     {/* Ruta para Administrar Usuarios */}
-                    <Route path="/AdministrarUsuarios" element={<AdministrarUsuarios />} />
+                    <Route path="/AdministrarUsuarios" element={<Layout><AdministrarUsuarios /></Layout>} />
 
                     {/* Ruta para Crear Usuarios */}
-                    <Route path="/CrearUsuario" element={<CrearUsuario />} />
+                    <Route path="/CrearUsuario" element={<Layout><CrearUsuario /></Layout>} />
 
                     {/* Ruta para Cambiar Password usuario autenticado actualmente*/}
-                    <Route path="/CambiarPassword" element={<CambiarPassword />} />
+                    <Route path="/CambiarPassword" element={<Layout><CambiarPassword /></Layout>} />
 
                     {/* Ruta para Cambiar Password página de admin */}
-                    <Route path="/CambiarPasswordAdmin/:userId" element={<CambiarPasswordAdmin />} /> 
+                    <Route path="/CambiarPasswordAdmin/:userId" element={<Layout><CambiarPasswordAdmin /></Layout>} /> 
 
                     {/* Ruta para Pagina en construccion */}
                     <Route path="/en-construccion" element={<UnderConstruction />} />

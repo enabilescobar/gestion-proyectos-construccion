@@ -81,7 +81,6 @@ const AdministrarUsuarios = () => {
 
     return (
         <div>
-            <Navbar />
             <div className="container mt-5">
                 {message && <div className="alert alert-info">{message}</div>}
                 {!message && (

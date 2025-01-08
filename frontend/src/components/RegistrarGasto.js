@@ -1,12 +1,11 @@
 // frontend/src/components/RegistrarGasto.js
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
-import Navbar from './Navbar';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const RegistrarGasto = () => {
-    const { id } = useParams(); 
+    const { id } = useParams(); // Obtiene el ID del proyecto desde la URL
     const navigate = useNavigate();
     const [gasto, setGasto] = useState({
         category: 'Materiales',
@@ -15,33 +14,60 @@ const RegistrarGasto = () => {
         doneBy: '',
         date: '',
     });
+    const [facturas, setFacturas] = useState([]); // Manejo de archivos adjuntos
     const [message, setMessage] = useState('');
 
+    // Manejo de archivos seleccionados
+    const handleFileChange = (e) => {
+        setFacturas(e.target.files); // Actualiza los archivos seleccionados
+    };
+
+    // Función para registrar el gasto
     const handleAddGasto = async (e) => {
         e.preventDefault();
+
+        // Crear un objeto para enviar los datos del gasto
+        const formData = new FormData();
+        formData.append('description', gasto.description);
+        formData.append('amount', gasto.amount);
+        formData.append('category', gasto.category);
+        formData.append('date', gasto.date);
+        formData.append('project', id); // Incluye el ID del proyecto
+        formData.append('doneBy', gasto.doneBy);
+
+        // Adjuntar los archivos seleccionados
+        for (let i = 0; i < facturas.length; i++) {
+            formData.append('facturas', facturas[i]);
+        }
+
         try {
             const token = localStorage.getItem('authToken');
-            await axios.post('http://localhost:5000/api/gastos', { ...gasto, project: id }, {
-                headers: { Authorization: `Bearer ${token}` },
+            await axios.post('http://localhost:5000/api/gastos', formData, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'multipart/form-data',
+                },
             });
             setMessage('Gasto registrado con éxito');
             setTimeout(() => navigate(`/proyectos/${id}/editar`), 2000);
         } catch (error) {
-            console.error('Error al registrar el gasto:', error);
-            setMessage('Error al registrar el gasto');
+            console.error('Error al registrar el gasto:', error.response?.data || error.message);
+            setMessage(`Error al registrar el gasto: ${error.response?.data?.message || error.message}`);
         }
     };
 
     return (
         <div>
-            <Navbar />
             <div className="container mt-5">
-                <button className="btn btn-outline-dark mb-3" onClick={() => navigate(`/proyectos/${id}/editar`)}>
+                <button
+                    className="btn btn-outline-dark mb-3"
+                    onClick={() => navigate(`/proyectos/${id}/editar`)}
+                >
                     Regresar
                 </button>
                 <h2 className="text-center mb-4">Registrar Gasto</h2>
                 {message && <div className="alert alert-info">{message}</div>}
-                <form onSubmit={handleAddGasto}>
+                <form onSubmit={handleAddGasto} encType="multipart/form-data">
                     <div className="mb-3">
                         <label>Categoría</label>
                         <select
@@ -95,7 +121,19 @@ const RegistrarGasto = () => {
                             required
                         />
                     </div>
-                    <button type="submit" className="btn btn-primary">Registrar Gasto</button>
+                    <div className="mb-3">
+                        <label>Adjuntar Facturas (opcional)</label>
+                        <input
+                            type="file"
+                            className="form-control"
+                            multiple
+                            accept=".jpg,.jpeg,.png,.pdf"
+                            onChange={handleFileChange}
+                        />
+                    </div>
+                    <button type="submit" className="btn btn-primary">
+                        Registrar Gasto
+                    </button>
                 </form>
             </div>
         </div>

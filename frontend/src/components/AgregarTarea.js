@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
-import Navbar from './Navbar';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const AgregarTarea = () => {
@@ -15,27 +14,33 @@ const AgregarTarea = () => {
         startDate: '',
         endDate: '',
     });
-    const [projectDates, setProjectDates] = useState({ start: '', end: '' }); // Fechas del proyecto
+    const [projectData, setProjectData] = useState({ name: '', start: '', end: '' }); // Datos del proyecto
+    const [tareas, setTareas] = useState([]); // Tareas existentes
     const [message, setMessage] = useState('');
 
-    // Obtener las fechas del proyecto al cargar la página
+    // Obtener los datos del proyecto y las tareas al cargar la página
     useEffect(() => {
-        const fetchProjectDates = async () => {
+        const fetchProjectData = async () => {
             try {
                 const token = localStorage.getItem('authToken');
                 const response = await axios.get(`http://localhost:5000/api/projects/${id}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
+                const { nombreProyecto, fechaInicio, fechaFin } = response.data;
+                setProjectData({ name: nombreProyecto, start: fechaInicio, end: fechaFin });
 
-                const { fechaInicio, fechaFin } = response.data;
-                setProjectDates({ start: fechaInicio, end: fechaFin });
+                // Cargar tareas asociadas al proyecto
+                const tareasResponse = await axios.get(`http://localhost:5000/api/tasks/proyecto/${id}`, {
+                    headers: { Authorization: `Bearer ${token}` },
+                });
+                setTareas(tareasResponse.data);
             } catch (error) {
-                console.error('Error al obtener las fechas del proyecto:', error);
-                setMessage('Error al cargar las fechas del proyecto.');
+                console.error('Error al obtener los datos del proyecto:', error);
+                setMessage('Error al cargar los datos del proyecto.');
             }
         };
 
-        fetchProjectDates();
+        fetchProjectData();
     }, [id]);
 
     const handleAddTarea = async (e) => {
@@ -45,8 +50,8 @@ const AgregarTarea = () => {
         // Validar fechas en el frontend
         const taskStart = new Date(tarea.startDate);
         const taskEnd = tarea.endDate ? new Date(tarea.endDate) : null;
-        const projectStart = new Date(projectDates.start);
-        const projectEnd = new Date(projectDates.end);
+        const projectStart = new Date(projectData.start);
+        const projectEnd = new Date(projectData.end);
 
         if (taskStart < projectStart || (taskEnd && taskEnd > projectEnd)) {
             setMessage('Las fechas de la tarea deben estar dentro del intervalo del proyecto.');
@@ -64,7 +69,12 @@ const AgregarTarea = () => {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setMessage('Tarea agregada con éxito');
-            setTimeout(() => navigate(`/proyectos/${id}/editar`), 2000);
+            // Recargar las tareas después de agregar una
+            const tareasResponse = await axios.get(`http://localhost:5000/api/tasks/proyecto/${id}`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            setTareas(tareasResponse.data); // Actualizar las tareas
+            setTarea({ title: '', description: '', status: 'Pendiente', startDate: '', endDate: '' }); // Limpiar formulario
         } catch (error) {
             console.error('Error al agregar tarea:', error);
             setMessage('Error al agregar la tarea');
@@ -73,13 +83,18 @@ const AgregarTarea = () => {
 
     return (
         <div>
-            <Navbar />
             <div className="container mt-5">
-                <button className="btn btn-outline-dark mb-3" onClick={() => navigate(`/proyectos/${id}/editar`)}>
-                    Regresar
-                </button>
-                <h2 className="text-center mb-4">Agregar Tarea</h2>
+                <h2 className="text-center mb-4">Agregar Tarea al Proyecto: {projectData.name}</h2>
+                <p className="text-center">
+                    <strong>Fecha de Inicio del Proyecto:</strong> 
+                    {new Date(projectData.start).toLocaleDateString('es-ES')}
+                </p>
+                <p className="text-center">
+                    <strong>Fecha de Inicio del Proyecto:</strong> 
+                    {new Date(projectData.end).toLocaleDateString('es-ES')}
+                </p>
                 {message && <div className="alert alert-info">{message}</div>}
+
                 <form onSubmit={handleAddTarea}>
                     <div className="mb-3">
                         <label>Título</label>
@@ -133,6 +148,35 @@ const AgregarTarea = () => {
                     </div>
                     <button type="submit" className="btn btn-primary">Agregar Tarea</button>
                 </form>
+
+                {/* Tabla de tareas existentes */}
+                <h3 className="mt-4">Tareas Existentes en el Proyecto</h3>
+                <table className="table table-bordered mt-3">
+                    <thead>
+                        <tr>
+                            <th>Título</th>
+                            <th>Descripción</th>
+                            <th>Estado</th>
+                            <th>Fechas de Inicio y Fin</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {tareas.map((tarea) => (
+                            <tr key={tarea._id}>
+                                <td>{tarea.title}</td>
+                                <td>{tarea.description}</td>
+                                <td>{tarea.status}</td>
+                                <td>
+                                    {new Date(tarea.startDate).toLocaleDateString()} - 
+                                    {new Date(tarea.endDate).toLocaleDateString()}
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+                <button className="btn btn-outline-dark mb-3" onClick={() => navigate(`/proyectos/${id}/editar`)}>
+                    Regresar
+                </button>
             </div>
         </div>
     );

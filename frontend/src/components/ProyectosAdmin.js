@@ -1,10 +1,10 @@
-// frontend/src/components/ProyectosAdmin.js
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Navbar from './Navbar'; 
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { jwtDecode } from 'jwt-decode';
+import { Col, Container, Row } from 'react-bootstrap';
 
 const ProyectosAdmin = () => {
     const [proyectosPendientes, setProyectosPendientes] = useState([]);
@@ -68,120 +68,128 @@ const ProyectosAdmin = () => {
     };
 
     return (
-        <div>
-            <Navbar />
-            <div className="container mt-4">
-                <h2 className="text-center mb-4">Proyectos en Curso</h2>
-                {message && <div className="alert alert-info">{message}</div>}
+        <div style={{ backgroundColor: '#4169E1', minHeight: '100vh' }}> {/* Color de fondo fuera del borde */}
+            <div className="d-flex">
+                <div className="main-content">
+                    <div className="container mt-4">
+                        {/* Envolviendo el contenido con un borde */}
+                        <div className="border p-4 rounded shadow-lg" style={{ backgroundColor: '#ffffff', height: '500px' }}> {/* Color de fondo del contenido */}
+                            <div>
+                                    <h2 className="text-center mb-4">Proyectos en Curso</h2>
+                                    {message && <div className="alert alert-info">{message}</div>}
 
-                {/* Proyectos en Proceso */}
-                <h4>Proyectos en Proceso</h4>
-                {loading ? (
-                    <div className="d-flex justify-content-center">
-                        <div className="spinner-border" role="status">
-                            <span className="visually-hidden">Cargando...</span>
+                                    {/* Proyectos en Proceso */}
+                                    <h4>Proyectos en Proceso</h4>
+                                    {loading ? (
+                                        <div className="d-flex justify-content-center">
+                                            <div className="spinner-border" role="status">
+                                                <span className="visually-hidden">Cargando...</span>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <table className="table table-bordered mb-4">
+                                            <thead>
+                                                <tr>
+                                                    <th>Nombre</th>
+                                                    <th>Descripción</th>
+                                                    <th>Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {proyectosEnProceso.length > 0 ? (
+                                                    proyectosEnProceso.map(proyecto => (
+                                                        <tr key={proyecto._id}>
+                                                            <td>{proyecto.nombreProyecto}</td>
+                                                            <td>{proyecto.descripcion}</td>
+                                                            <td>
+                                                                <button
+                                                                    className="btn btn-info"
+                                                                    onClick={() => handleVerProyecto(proyecto._id)}
+                                                                >
+                                                                    Ver Detalles
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    ))
+                                                ) : (
+                                                    <tr>
+                                                        <td colSpan="3" className="text-center">
+                                                            No hay proyectos en proceso
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    )}
+
+                                    {/* Proyectos Pendientes */}
+                                    <h4>Proyectos Pendientes</h4>
+                                    {loading ? (
+                                        <div className="d-flex justify-content-center">
+                                            <div className="spinner-border" role="status">
+                                                <span className="visually-hidden">Cargando...</span>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <table className="table table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <th>Nombre</th>
+                                                    <th>Descripción</th>
+                                                    <th>Acciones</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {proyectosPendientes.length > 0 ? (
+                                                    proyectosPendientes.map(proyecto => (
+                                                        <tr key={proyecto._id}>
+                                                            <td>{proyecto.nombreProyecto}</td>
+                                                            <td>{proyecto.descripcion}</td>
+                                                            <td>
+                                                                <button
+                                                                    className="btn btn-info"
+                                                                    onClick={() => handleVerProyecto(proyecto._id)}
+                                                                >
+                                                                    Ver Detalles
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    ))
+                                                ) : (
+                                                    <tr>
+                                                        <td colSpan="3" className="text-center">
+                                                            No hay proyectos pendientes
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    )}
+
+                                    {/* Botones de acciones */}
+                                    <div className="d-flex justify-content-between mt-4">
+                                        {/* Mostrar el botón "Administrar Proyectos" solo si el usuario no es "user" */}
+                                        {userRole !== 'user' && (
+                                            <button
+                                                className="btn btn-secondary"
+                                                onClick={() => navigate('/proyectos')}
+                                            >
+                                                Administrar Proyectos
+                                            </button>
+                                        )}
+                                        <button
+                                            className="btn btn-outline-dark"
+                                            onClick={handleRegresar}
+                                        >
+                                            Regresar
+                                        </button>
+                                    </div>
+                            </div>
                         </div>
                     </div>
-                ) : (
-                    <table className="table table-bordered mb-4">
-                        <thead>
-                            <tr>
-                                <th>Nombre</th>
-                                <th>Descripción</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {proyectosEnProceso.length > 0 ? (
-                                proyectosEnProceso.map(proyecto => (
-                                    <tr key={proyecto._id}>
-                                        <td>{proyecto.nombreProyecto}</td>
-                                        <td>{proyecto.descripcion}</td>
-                                        <td>
-                                            <button
-                                                className="btn btn-info"
-                                                onClick={() => handleVerProyecto(proyecto._id)}
-                                            >
-                                                Ver Detalles
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan="3" className="text-center">
-                                        No hay proyectos en proceso
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                )}
-
-                {/* Proyectos Pendientes */}
-                <h4>Proyectos Pendientes</h4>
-                {loading ? (
-                    <div className="d-flex justify-content-center">
-                        <div className="spinner-border" role="status">
-                            <span className="visually-hidden">Cargando...</span>
-                        </div>
-                    </div>
-                ) : (
-                    <table className="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th>Nombre</th>
-                                <th>Descripción</th>
-                                <th>Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {proyectosPendientes.length > 0 ? (
-                                proyectosPendientes.map(proyecto => (
-                                    <tr key={proyecto._id}>
-                                        <td>{proyecto.nombreProyecto}</td>
-                                        <td>{proyecto.descripcion}</td>
-                                        <td>
-                                            <button
-                                                className="btn btn-info"
-                                                onClick={() => handleVerProyecto(proyecto._id)}
-                                            >
-                                                Ver Detalles
-                                            </button>
-                                        </td>
-                                    </tr>
-                                ))
-                            ) : (
-                                <tr>
-                                    <td colSpan="3" className="text-center">
-                                        No hay proyectos pendientes
-                                    </td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                )}
-
-                {/* Botones de acciones */}
-                <div className="mb-4 d-flex justify-content-between">
-                    {/* Mostrar el botón "Administrar Proyectos" solo si el usuario no es "user" */}
-                    {userRole !== 'user' && (
-                        <button
-                            className="btn btn-secondary"
-                            onClick={() => navigate('/proyectos')}
-                        >
-                            Administrar Proyectos
-                        </button>
-                    )}
-                    <button
-                        className="btn btn-outline-dark"
-                        onClick={handleRegresar}
-                    >
-                        Regresar
-                    </button>
                 </div>
             </div>
-        </div>
+        </div>        
     );
 };
 

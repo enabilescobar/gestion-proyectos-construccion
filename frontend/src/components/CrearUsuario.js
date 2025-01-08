@@ -51,7 +51,6 @@ const CrearUsuario = () => {
 
     return (
         <div>
-            <Navbar />
             <div className="container mt-5">
                 <h2 className="mb-4">Crear Usuario</h2>
                 {message && <div className="alert alert-info">{message}</div>}

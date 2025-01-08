@@ -10,6 +10,7 @@ const ProyectoDetails = () => {
     const [tasks, setTasks] = useState([]);
     const [expenses, setExpenses] = useState([]);
     const [totalExpenses, setTotalExpenses] = useState(0);
+    const [userRole, setUserRole] = useState(''); // Estado para el rol del usuario
     const [loading, setLoading] = useState(true);
     const [message, setMessage] = useState('');
     const navigate = useNavigate();
@@ -17,7 +18,20 @@ const ProyectoDetails = () => {
 
     useEffect(() => {
         fetchProjectDetails();
+        fetchUserRole(); // Obtener el rol del usuario
     }, []);
+
+    const fetchUserRole = () => {
+        const token = localStorage.getItem('authToken');
+        if (token) {
+            try {
+                const decodedToken = JSON.parse(atob(token.split('.')[1])); // Decodificar el token JWT
+                setUserRole(decodedToken.role);
+            } catch (error) {
+                console.error('Error al decodificar el token:', error);
+            }
+        }
+    };
 
     const fetchProjectDetails = async () => {
         setLoading(true);
@@ -44,17 +58,19 @@ const ProyectoDetails = () => {
             });
             setTasks(tasksResponse.data);
 
-            // Obtener gastos del proyecto
-            const expensesResponse = await axios.get(`http://localhost:5000/api/gastos/project/${id}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            setExpenses(expensesResponse.data);
+            // Obtener gastos del proyecto solo si el rol no es "user"
+            if (userRole !== 'user') {
+                const expensesResponse = await axios.get(`http://localhost:5000/api/gastos/project/${id}`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+                setExpenses(expensesResponse.data);
 
-            // Calcular total de los gastos
-            const total = expensesResponse.data.reduce((acc, expense) => acc + expense.amount, 0);
-            setTotalExpenses(total);
+                // Calcular total de los gastos
+                const total = expensesResponse.data.reduce((acc, expense) => acc + expense.amount, 0);
+                setTotalExpenses(total);
+            }
 
             setLoading(false);
         } catch (error) {
@@ -66,7 +82,6 @@ const ProyectoDetails = () => {
 
     return (
         <div>
-            <Navbar />
             <div className="container mt-5">
                 <h2 className="mb-4">Detalles del Proyecto</h2>
                 {message && <div className="alert alert-info">{message}</div>}
@@ -106,32 +121,36 @@ const ProyectoDetails = () => {
                             </tbody>
                         </Table>
 
-                        {/* Listado de Gastos */}
-                        <h4 className="mt-4">Gastos Relacionados</h4>
-                        <Table striped bordered hover className="mt-3">
-                            <thead>
-                                <tr>
-                                    <th>Categoría</th>
-                                    <th>Realizado por</th>
-                                    <th>Monto</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {expenses.map((expense) => (
-                                    <tr key={expense._id}>
-                                        <td>{expense.category}</td>
-                                        <td>{expense.doneBy}</td>
-                                        <td>{expense.amount.toFixed(2)} Lps</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </Table>
+                        {/* Mostrar gastos solo si el usuario no es de rol "user" */}
+                        {userRole !== 'user' && (
+                            <>
+                                <h4 className="mt-4">Gastos Relacionados</h4>
+                                <Table striped bordered hover className="mt-3">
+                                    <thead>
+                                        <tr>
+                                            <th>Categoría</th>
+                                            <th>Realizado por</th>
+                                            <th>Monto</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {expenses.map((expense) => (
+                                            <tr key={expense._id}>
+                                                <td>{expense.category}</td>
+                                                <td>{expense.doneBy}</td>
+                                                <td>{expense.amount.toFixed(2)} Lps</td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </Table>
 
-                        {/* Total de Gastos */}
-                        <div className="mt-4 p-4 bg-light rounded text-center">
-                            <h5>Total de Gastos del Proyecto:</h5>
-                            <h3 className="text-primary">{totalExpenses.toFixed(2)} Lps</h3>
-                        </div>
+                                {/* Total de Gastos */}
+                                <div className="mt-4 p-4 bg-light rounded text-center">
+                                    <h5>Total de Gastos del Proyecto:</h5>
+                                    <h3 className="text-primary">{totalExpenses.toFixed(2)} Lps</h3>
+                                </div>
+                            </>
+                        )}
 
                         {/* Botón de Regresar */}
                         <div className="mt-4 text-center">

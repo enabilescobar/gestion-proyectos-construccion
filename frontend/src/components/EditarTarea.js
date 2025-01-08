@@ -56,7 +56,6 @@ const EditarTarea = () => {
 
     return (
         <div>
-            <Navbar />
             <div className="container mt-5">
                 <button className="btn btn-outline-dark mb-3" onClick={() => navigate(`/proyectos/${id}/editar`)}>
                     Regresar

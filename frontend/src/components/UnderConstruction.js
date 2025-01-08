@@ -8,7 +8,6 @@ const UnderConstruction = () => {
 
     return (
         <div>
-            <Navbar />
             <div className="container text-center mt-5">
                 <h1 className="display-4 text-warning">¡Página en Construcción!</h1>
                 <p className="lead mt-4">Estamos trabajando arduamente para traer esta funcionalidad lo más pronto posible.</p>

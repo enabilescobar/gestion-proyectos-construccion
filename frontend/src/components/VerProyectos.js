@@ -51,7 +51,6 @@ const VerProyectos = () => {
 
     return (
         <div>
-            <Navbar />
             <div className="container mt-5">
                 <h2 className="text-center mb-4">Administracion de Proyectos</h2>
                 {message && <div className="alert alert-info">{message}</div>}
@@ -76,7 +75,7 @@ const VerProyectos = () => {
                                         className="btn btn-warning me-2"
                                         onClick={() => navigate(`/proyectos/${project._id}/editar`)}
                                     >
-                                        Editar
+                                        Actualizar
                                     </button>
                                     <button
                                         className="btn btn-danger"
@@ -90,7 +89,7 @@ const VerProyectos = () => {
                     </tbody>
                 </table>
 
-                <div className="mb-4 d-flex justify-content-between">
+                <div className="mt-4 d-flex justify-content-between">
                     <button
                         className="btn btn-primary"
                         onClick={() => navigate('/proyectos/agregar')}

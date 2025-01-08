@@ -44,7 +44,6 @@ const CambiarPassword = () => {
 
     return (
         <div>
-            <Navbar />
             <div className="container mt-5">
                 <h2>Cambiar Contraseña</h2>
                 {message && <div className="alert alert-info">{message}</div>}
