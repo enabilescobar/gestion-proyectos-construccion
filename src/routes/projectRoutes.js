@@ -7,7 +7,39 @@ const authorize = require('../middleware/auth');
 const authenticate = require('../middleware/authenticate'); 
 const router = express.Router();
 
-// Crear un nuevo proyecto
+/**
+ * Método para calcular y actualizar el avance de un proyecto
+ */
+const calculateProjectProgress = async (projectId) => {
+    try {
+        if (!mongoose.Types.ObjectId.isValid(projectId)) {
+            console.error(`ID de proyecto inválido: ${projectId}`);
+            return;
+        }
+
+        const totalTasks = await Task.countDocuments({ project: projectId });
+        const completedTasks = await Task.countDocuments({ project: projectId, status: 'Completado' });
+
+        console.log(`Total de tareas: ${totalTasks}, Tareas completadas: ${completedTasks}`);
+
+        const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+        const updatedProject = await Project.findByIdAndUpdate(projectId, { avance: progress }, { new: true });
+
+        if (!updatedProject) {
+            console.error(`No se encontró el proyecto con ID: ${projectId}`);
+            return;
+        }
+
+        console.log(`Avance actualizado en la BD: ${progress}%`);
+    } catch (error) {
+        console.error(`Error al calcular el avance del proyecto ${projectId}:`, error);
+    }
+};
+
+/**
+ * Crear un nuevo proyecto
+ */
 router.post('/', authenticate, authorize(['admin', 'manager']), async (req, res) => {
     try {
         const { nombreProyecto, descripcion, fechaInicio, fechaFin, presupuesto, encargado, equipoTrabajo } = req.body;
@@ -29,12 +61,12 @@ router.post('/', authenticate, authorize(['admin', 'manager']), async (req, res)
         const newProject = new Project({
             nombreProyecto,
             descripcion,
+            presupuesto,
             fechaInicio,
             fechaFin,
             status: 'Pendiente', 
-            presupuesto,
-            encargado, // El encargado es el manager
-            equipoTrabajo, // El equipo de trabajo puede estar vacío
+            encargado,
+            equipoTrabajo,
             createdBy,
         });
 
@@ -46,12 +78,13 @@ router.post('/', authenticate, authorize(['admin', 'manager']), async (req, res)
     }
 });
 
-// Obtener todos los proyectos
+/**
+ * Obtener todos los proyectos
+ */
 router.get('/', authenticate, authorize(['admin', 'manager', 'user']), async (req, res) => {
     try {
         const { status, createdBy } = req.query;
 
-        // Construir el filtro dinámico en el futuro
         const filter = {};
         if (status) filter.status = status;
         if (createdBy) filter.createdBy = createdBy;
@@ -64,7 +97,9 @@ router.get('/', authenticate, authorize(['admin', 'manager', 'user']), async (re
     }
 });
 
-// Obtener un proyecto por ID
+/**
+ * Obtener un proyecto por ID
+ */
 router.get('/:id', authenticate, authorize(['admin', 'manager', 'user']), async (req, res) => {
     try {
         const project = await Project.findById(req.params.id).populate('createdBy', 'username email');
@@ -78,17 +113,17 @@ router.get('/:id', authenticate, authorize(['admin', 'manager', 'user']), async 
     }
 });
 
-// Actualizar un proyecto
+/**
+ * Actualizar un proyecto
+ */
 router.put('/:id', authenticate, authorize(['admin', 'manager']), async (req, res) => {
     try {
         const { nombreProyecto, descripcion, fechaInicio, fechaFin, status, presupuesto, equipoTrabajo } = req.body;
 
-        // Validar los datos recibidos
         if (!nombreProyecto || !fechaInicio || !presupuesto || !equipoTrabajo) {
             return res.status(400).json({ message: 'Nombre del proyecto, fecha de inicio, presupuesto y equipo de trabajo son obligatorios' });
         }
 
-        // Validar que la fecha de inicio sea anterior a la fecha de fin
         if (fechaFin && new Date(fechaInicio) >= new Date(fechaFin)) {
             return res.status(400).json({ message: 'La fecha de inicio debe ser anterior a la fecha de fin.' });
         }
@@ -110,18 +145,55 @@ router.put('/:id', authenticate, authorize(['admin', 'manager']), async (req, re
     }
 });
 
-// Eliminar un proyecto y sus tareas relacionadas
+/**
+ * Actualizar el estado de una tarea y el avance del proyecto
+ */
+router.put('/tareas/:taskId', authenticate, authorize(['admin', 'manager']), async (req, res) => {
+    try {
+        const { taskId } = req.params;
+        const { status } = req.body;
+
+        const task = await Task.findByIdAndUpdate(taskId, { status }, { new: true });
+        if (!task) {
+            return res.status(404).json({ message: 'Tarea no encontrada.' });
+        }
+
+        await calculateProjectProgress(task.project); // Recalcular avance del proyecto
+
+        res.status(200).json({ message: 'Estado de tarea actualizado y avance recalculado.', task });
+    } catch (error) {
+        console.error('Error al actualizar la tarea:', error);
+        res.status(500).json({ message: 'Error al actualizar la tarea.', error });
+    }
+});
+
+/**
+ * Ruta para recalcular manualmente el avance del proyecto
+ */
+router.put('/:id/avance', authenticate, authorize(['admin', 'manager']), async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        await calculateProjectProgress(id);
+
+        const updatedProject = await Project.findById(id);
+        res.status(200).json({ message: 'Avance del proyecto recalculado.', project: updatedProject });
+    } catch (error) {
+        console.error('Error al recalcular el avance del proyecto:', error);
+        res.status(500).json({ message: 'Error al recalcular el avance del proyecto.', error });
+    }
+});
+
+/**
+ * Eliminar un proyecto y sus tareas relacionadas
+ */
 router.delete('/:id', authenticate, authorize(['admin']), async (req, res) => {
     try {
         const projectId = req.params.id;
 
-        // Eliminar todas las tareas relacionadas con el proyecto
         await Task.deleteMany({ project: projectId });
-
-        // Eliminar todos los gastos relacionados con el proyecto
         await Gasto.deleteMany({ project: projectId });
 
-        // Eliminar el proyecto
         const deletedProject = await Project.findByIdAndDelete(projectId);
         if (!deletedProject) {
             return res.status(404).json({ message: 'Proyecto no encontrado' });

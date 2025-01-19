@@ -43,9 +43,17 @@ const EditarTarea = () => {
         e.preventDefault();
         try {
             const token = localStorage.getItem('authToken');
+            
+            // Actualizar la tarea
             await axios.put(`http://localhost:5000/api/tasks/${taskId}`, tarea, {
                 headers: { Authorization: `Bearer ${token}` },
             });
+
+            // Llamar a la API para recalcular el avance del proyecto después de actualizar la tarea
+            await axios.put(`http://localhost:5000/api/projects/${id}/avance`, {}, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
             setMessage('Tarea actualizada con éxito');
             setTimeout(() => navigate(`/proyectos/${id}/editar`), 2000);
         } catch (error) {
@@ -92,6 +100,8 @@ const EditarTarea = () => {
                             <option value="Pendiente">Pendiente</option>
                             <option value="En Proceso">En Proceso</option>
                             <option value="Completado">Completado</option>
+                            <option value="Suspendido">Suspendido</option>
+                            <option value="Cancelado">Cancelado</option>
                         </select>
                     </div>
                     <div className="mb-3">

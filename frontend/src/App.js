@@ -20,6 +20,7 @@ import CambiarPassword from './components/CambiarPassword';
 import CambiarPasswordAdmin from './components/CambiarPasswordAdmin';
 import UnderConstruction from './components/UnderConstruction';
 import 'bootstrap/dist/css/bootstrap.min.css'; // Esto es necesario para que las clases de Bootstrap funcionen
+import "dhtmlx-gantt/codebase/dhtmlxgantt.css";
 import './App.css';
 import Sidebar from './components/Sidebar';
 

@@ -3,19 +3,27 @@ const express = require('express');
 const Task = require('../models/tasks');
 const Project = require('../models/projects');
 const User = require('../models/users');
-const authenticate = require('../middleware/authenticate'); 
-const authorize = require('../middleware/auth'); 
+const authenticate = require('../middleware/authenticate');
+const authorize = require('../middleware/auth');
 const router = express.Router();
 
 // Crear una nueva tarea (solo admin y manager)
 router.post('/', authenticate, authorize(['admin', 'manager']), async (req, res) => {
     try {
-        const { title, description, status, project, startDate, endDate, assignedTo } = req.body;
+        const { title, description, status, project, startDate, endDate, assignedTo, dependencias } = req.body;
 
         // Verificar que el proyecto exista
         const existingProject = await Project.findById(project);
         if (!existingProject) {
             return res.status(404).json({ message: "Proyecto no encontrado" });
+        }
+
+        // Validar dependencias
+        if (dependencias && dependencias.length > 0) {
+            const dependencyTasks = await Task.find({ _id: { $in: dependencias }, project });
+            if (dependencyTasks.length !== dependencias.length) {
+                return res.status(400).json({ message: "Algunas dependencias no existen o no pertenecen al mismo proyecto." });
+            }
         }
 
         // Validar que las fechas de la tarea estén dentro del rango del proyecto
@@ -44,6 +52,7 @@ router.post('/', authenticate, authorize(['admin', 'manager']), async (req, res)
             startDate,
             endDate,
             assignedTo,
+            dependencias,
         });
 
         await newTask.save();
@@ -58,7 +67,9 @@ router.post('/', authenticate, authorize(['admin', 'manager']), async (req, res)
 router.get('/proyecto/:projectId', authenticate, authorize(['admin', 'manager', 'user']), async (req, res) => {
     try {
         const { projectId } = req.params;
-        const tasks = await Task.find({ project: projectId }).populate('assignedTo', 'username email');
+        const tasks = await Task.find({ project: projectId })
+            .populate('assignedTo', 'username email')
+            .populate('dependencias', 'title status startDate endDate');
         res.status(200).json(tasks);
     } catch (error) {
         console.error("Error al obtener las tareas:", error);
@@ -70,7 +81,9 @@ router.get('/proyecto/:projectId', authenticate, authorize(['admin', 'manager', 
 router.get('/:id', authenticate, authorize(['admin', 'manager', 'user']), async (req, res) => {
     try {
         const { id } = req.params;
-        const task = await Task.findById(id).populate('assignedTo', 'username email');
+        const task = await Task.findById(id)
+            .populate('assignedTo', 'username email')
+            .populate('dependencias', 'title status startDate endDate');
         if (!task) {
             return res.status(404).json({ message: "Tarea no encontrada" });
         }
@@ -85,7 +98,7 @@ router.get('/:id', authenticate, authorize(['admin', 'manager', 'user']), async 
 router.put('/:id', authenticate, authorize(['admin', 'manager']), async (req, res) => {
     try {
         const { id } = req.params;
-        const { title, description, status, startDate, endDate, assignedTo, project } = req.body;
+        const { title, description, status, startDate, endDate, assignedTo, project, dependencias } = req.body;
 
         // Verificar que la tarea exista
         const existingTask = await Task.findById(id);
@@ -97,6 +110,14 @@ router.put('/:id', authenticate, authorize(['admin', 'manager']), async (req, re
         const existingProject = await Project.findById(project || existingTask.project);
         if (!existingProject) {
             return res.status(404).json({ message: "Proyecto no encontrado" });
+        }
+
+        // Validar dependencias
+        if (dependencias && dependencias.length > 0) {
+            const dependencyTasks = await Task.find({ _id: { $in: dependencias }, project: existingProject._id });
+            if (dependencyTasks.length !== dependencias.length) {
+                return res.status(400).json({ message: "Algunas dependencias no existen o no pertenecen al mismo proyecto." });
+            }
         }
 
         // Validar que las fechas de la tarea estén dentro del rango del proyecto
@@ -119,7 +140,7 @@ router.put('/:id', authenticate, authorize(['admin', 'manager']), async (req, re
         // Actualizar la tarea
         const updatedTask = await Task.findByIdAndUpdate(
             id,
-            { title, description, status, startDate, endDate, assignedTo },
+            { title, description, status, startDate, endDate, assignedTo, dependencias },
             { new: true }
         );
 
@@ -135,38 +156,28 @@ router.delete('/:id', authenticate, authorize(['admin']), async (req, res) => {
     try {
         const { id } = req.params;
 
+        // Verificar si la tarea tiene dependencias
+        const dependents = await Task.find({ dependencias: id });
+        if (dependents.length > 0) {
+            return res.status(400).json({
+                message: 'La tarea no puede ser eliminada porque otras tareas dependen de ella.',
+                dependents: dependents.map(task => ({
+                    id: task._id,
+                    title: task.title,
+                })),
+            });
+        }
+
+        // Eliminar la tarea
         const deletedTask = await Task.findByIdAndDelete(id);
         if (!deletedTask) {
-            return res.status(404).json({ message: "Tarea no encontrada" });
+            return res.status(404).json({ message: 'Tarea no encontrada.' });
         }
 
-        res.status(200).json({ message: "Tarea eliminada con éxito" });
+        res.status(200).json({ message: 'Tarea eliminada con éxito.' });
     } catch (error) {
-        console.error("Error al eliminar la tarea:", error);
-        res.status(500).json({ message: "Error al eliminar la tarea", error });
-    }
-});
-
-// Asignar un usuario a una tarea (solo admin y manager)
-router.put('/:id/asignar', authenticate, authorize(['admin', 'manager']), async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { assignedTo } = req.body;
-
-        const user = await User.findById(assignedTo);
-        if (!user) {
-            return res.status(404).json({ message: "Usuario no encontrado" });
-        }
-
-        const task = await Task.findByIdAndUpdate(id, { assignedTo }, { new: true });
-        if (!task) {
-            return res.status(404).json({ message: "Tarea no encontrada" });
-        }
-
-        res.status(200).json({ message: "Tarea asignada con éxito", task });
-    } catch (error) {
-        console.error("Error al asignar la tarea", error);
-        res.status(500).json({ message: "Error al asignar la tarea", error });
+        console.error('Error al eliminar la tarea:', error);
+        res.status(500).json({ message: 'Error al eliminar la tarea.', error });
     }
 });
 

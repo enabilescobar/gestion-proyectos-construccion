@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Navbar from './Navbar';
-import { Button, Modal } from 'react-bootstrap';
+import { Table, Button, Modal } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode'; 
@@ -105,7 +105,7 @@ const AdministrarUsuarios = () => {
                             Regresar
                         </Button>
 
-                        <table className="table table-bordered">
+                        <Table striped bordered hover className="table table-bordered">
                             <thead>
                                 <tr>
                                     <th>Nombre</th>
@@ -151,7 +151,7 @@ const AdministrarUsuarios = () => {
                                     </tr>
                                 ))}
                             </tbody>
-                        </table>
+                        </Table>
 
                         {/* Modal de Confirmación para Eliminar */}
                         <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>

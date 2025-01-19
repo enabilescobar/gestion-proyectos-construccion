@@ -13,7 +13,7 @@ const taskSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Pendiente', 'En Progreso', 'Completado', 'En Proceso'],
+        enum: ['Pendiente', 'Completado', 'En Proceso', 'Suspendido', 'Cancelado'],
         default: 'Pendiente'
     },
     project: {
@@ -31,6 +31,10 @@ const taskSchema = new mongoose.Schema({
     endDate: { 
         type: Date 
     },
+    dependencias: [{ // Campo agregado para manejar dependencias
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Task'
+    }]
 }, { timestamps: true });
 
 module.exports = mongoose.model('Task', taskSchema);

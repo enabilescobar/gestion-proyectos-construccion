@@ -155,6 +155,9 @@ const EditarProyecto = () => {
                 <button className="btn btn-outline-dark mb-3" onClick={handleBack}>
                     Regresar
                 </button>
+                <button className="btn btn-secondary mb-3"type="submit">
+                    Guardar Cambios
+                </button>
                 <h2 className="text-center mb-4">Editar Proyecto</h2>
                 {message && <div className="alert alert-info">{message}</div>}
 
@@ -217,7 +220,7 @@ const EditarProyecto = () => {
                             onChange={(e) => setProyecto({ ...proyecto, status: e.target.value })}
                         >
                             <option value="Pendiente">Pendiente</option>
-                            <option value="En Progreso">En Progreso</option>
+                            <option value="En Proceso">En Proceso</option>
                             <option value="Completado">Completado</option>
                         </select>
                     </div>
