@@ -1,4 +1,3 @@
-// src/models/tasks.js
 const mongoose = require('mongoose');
 
 const taskSchema = new mongoose.Schema({
@@ -36,5 +35,18 @@ const taskSchema = new mongoose.Schema({
         ref: 'Task'
     }]
 }, { timestamps: true });
+
+// Campo virtual para determinar si la tarea está bloqueada
+taskSchema.virtual('isBlocked').get(function () {
+    // La tarea está bloqueada si tiene dependencias y alguna no está en estado "Completado"
+    if (this.dependencias && this.dependencias.length > 0) {
+        return this.dependencias.some(dep => dep.status !== 'Completado');
+    }
+    return false;
+});
+
+// Incluir los campos virtuales en la salida JSON
+taskSchema.set('toJSON', { virtuals: true });
+taskSchema.set('toObject', { virtuals: true });
 
 module.exports = mongoose.model('Task', taskSchema);

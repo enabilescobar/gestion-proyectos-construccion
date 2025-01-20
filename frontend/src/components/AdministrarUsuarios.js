@@ -124,13 +124,13 @@ const AdministrarUsuarios = () => {
                                         <td>{user.isActive ? 'Activo' : 'Inactivo'}</td>
                                         <td>
                                             {/* Deshabilitar acciones para usuarios con rol user */}
-                                            <Button
+                                            {/*<Button
                                                 variant="warning"
                                                 size="sm"
                                                 disabled={userRole === 'user'}
                                             >
                                                 Editar
-                                            </Button>{' '}
+                                            </Button>{' '}*/}
                                             <Button
                                                 variant="danger"
                                                 size="sm"

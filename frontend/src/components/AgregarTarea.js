@@ -13,6 +13,7 @@ const AgregarTarea = () => {
         status: 'Pendiente',
         startDate: '',
         endDate: '',
+        dependencias: []
     });
     const [projectData, setProjectData] = useState({ name: '', start: '', end: '' }); // Datos del proyecto
     const [tareas, setTareas] = useState([]); // Tareas existentes
@@ -29,11 +30,11 @@ const AgregarTarea = () => {
                 const { nombreProyecto, fechaInicio, fechaFin } = response.data;
                 setProjectData({ name: nombreProyecto, start: fechaInicio, end: fechaFin });
 
-                // Cargar tareas asociadas al proyecto
+                // Cargar tareas asociadas al proyecto (excluyendo tareas completadas)
                 const tareasResponse = await axios.get(`http://localhost:5000/api/tasks/proyecto/${id}`, {
                     headers: { Authorization: `Bearer ${token}` },
                 });
-                setTareas(tareasResponse.data);
+                setTareas(tareasResponse.data.filter(tarea => tarea.status !== 'Completado'));
             } catch (error) {
                 console.error('Error al obtener los datos del proyecto:', error);
                 setMessage('Error al cargar los datos del proyecto.');
@@ -42,6 +43,14 @@ const AgregarTarea = () => {
 
         fetchProjectData();
     }, [id]);
+
+    const handleCheckboxChange = (taskId) => {
+        if (tarea.dependencias.includes(taskId)) {
+            setTarea({ ...tarea, dependencias: tarea.dependencias.filter(dep => dep !== taskId) });
+        } else {
+            setTarea({ ...tarea, dependencias: [...tarea.dependencias, taskId] });
+        }
+    };
 
     const handleAddTarea = async (e) => {
         e.preventDefault();
@@ -69,12 +78,13 @@ const AgregarTarea = () => {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setMessage('Tarea agregada con éxito');
+
             // Recargar las tareas después de agregar una
             const tareasResponse = await axios.get(`http://localhost:5000/api/tasks/proyecto/${id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setTareas(tareasResponse.data); // Actualizar las tareas
-            setTarea({ title: '', description: '', status: 'Pendiente', startDate: '', endDate: '' }); // Limpiar formulario
+            setTarea({ title: '', description: '', status: 'Pendiente', startDate: '', endDate: '', dependencias: [] });
         } catch (error) {
             console.error('Error al agregar tarea:', error);
             setMessage('Error al agregar la tarea');
@@ -86,12 +96,10 @@ const AgregarTarea = () => {
             <div className="container mt-5">
                 <h2 className="text-center mb-4">Agregar Tarea al Proyecto: {projectData.name}</h2>
                 <p className="text-center">
-                    <strong>Fecha de Inicio del Proyecto:</strong> 
-                    {new Date(projectData.start).toLocaleDateString('es-ES')}
+                    <strong>Fecha de Inicio del Proyecto:</strong> {new Date(projectData.start).toLocaleDateString('es-ES')}
                 </p>
                 <p className="text-center">
-                    <strong>Fecha de Inicio del Proyecto:</strong> 
-                    {new Date(projectData.end).toLocaleDateString('es-ES')}
+                    <strong>Fecha de Finalización del Proyecto:</strong> {new Date(projectData.end).toLocaleDateString('es-ES')}
                 </p>
                 {message && <div className="alert alert-info">{message}</div>}
 
@@ -146,10 +154,34 @@ const AgregarTarea = () => {
                             onChange={(e) => setTarea({ ...tarea, endDate: e.target.value })}
                         />
                     </div>
+
+                    <div className="mb-3">
+                        <label>Dependencias</label>
+                        <div className="border p-3">
+                            {tareas.length > 0 ? (
+                                tareas.map(task => (
+                                    <div key={task._id} className="form-check">
+                                        <input
+                                            type="checkbox"
+                                            className="form-check-input"
+                                            checked={tarea.dependencias.includes(task._id)}
+                                            onChange={() => handleCheckboxChange(task._id)}
+                                        />
+                                        <label className="form-check-label">
+                                            {task.title} ({task.status})
+                                        </label>
+                                    </div>
+                                ))
+                            ) : (
+                                <p>No hay tareas disponibles como dependencias.</p>
+                            )}
+                        </div>
+                    </div>
+
                     <button type="submit" className="btn btn-primary">Agregar Tarea</button>
                 </form>
 
-                {/* Tabla de tareas existentes */}
+                {/* Tabla de tareas existentes con dependencias */}
                 <h3 className="mt-4">Tareas Existentes en el Proyecto</h3>
                 <table className="table table-bordered mt-3">
                     <thead>
@@ -158,6 +190,7 @@ const AgregarTarea = () => {
                             <th>Descripción</th>
                             <th>Estado</th>
                             <th>Fechas de Inicio y Fin</th>
+                            <th>Dependencias</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -168,13 +201,24 @@ const AgregarTarea = () => {
                                 <td>{tarea.status}</td>
                                 <td>
                                     {new Date(tarea.startDate).toLocaleDateString()} - 
-                                    {new Date(tarea.endDate).toLocaleDateString()}
+                                    {tarea.endDate ? new Date(tarea.endDate).toLocaleDateString() : 'No definida'}
+                                </td>
+                                <td>
+                                    {tarea.dependencias && tarea.dependencias.length > 0 ? (
+                                        <ul className="list-unstyled mb-0">
+                                            {tarea.dependencias.map(dep => (
+                                                <li key={dep._id}>{dep.title}</li>
+                                            ))}
+                                        </ul>
+                                    ) : (
+                                        <span className="text-muted">Sin dependencias</span>
+                                    )}
                                 </td>
                             </tr>
                         ))}
                     </tbody>
                 </table>
-                <button className="btn btn-outline-dark mb-3" onClick={() => navigate(`/proyectos/${id}/editar`)}>
+                <button className="btn btn-outline-dark mt-3" onClick={() => navigate(`/proyectos/${id}/editar`)}>
                     Regresar
                 </button>
             </div>

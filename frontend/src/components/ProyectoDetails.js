@@ -90,6 +90,7 @@ const ProyectoDetails = () => {
                 <>
                     <div className="mb-4">
                         <h2>{project?.nombreProyecto}</h2>
+                        <p></p>
                         <p><strong>Descripción:</strong> {project?.descripcion}</p>
                         {userRole !== 'user' && <p><strong>Presupuesto:</strong> {project?.presupuesto}</p>}
                         <p><strong>Fecha de Inicio:</strong> {new Date(project?.fechaInicio).toLocaleDateString()}</p>
@@ -111,6 +112,7 @@ const ProyectoDetails = () => {
                                 <th>Fecha de Inicio</th>
                                 <th>Fecha de Fin</th>
                                 <th>Estado</th>
+                                <th>Dependencias</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -120,6 +122,17 @@ const ProyectoDetails = () => {
                                     <td>{new Date(task.startDate).toLocaleDateString()}</td>
                                     <td>{new Date(task.endDate).toLocaleDateString()}</td>
                                     <td>{task.status}</td>
+                                    <td>
+                                        {task.dependencias && task.dependencias.length > 0 ? (
+                                            <ul className="list-unstyled mb-0">
+                                                {task.dependencias.map(dep => (
+                                                    <li key={dep._id}>{dep.title}</li>
+                                                ))}
+                                            </ul>
+                                        ) : (
+                                            <span className="text-muted">Sin dependencias</span>
+                                        )}
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
@@ -148,15 +161,37 @@ const ProyectoDetails = () => {
                             </Table>
 
                             <div className="mt-4 p-4 bg-light rounded text-center">
-                                <h5>Total de Gastos del Proyecto:</h5>
-                                <h3 className="text-primary">{totalExpenses.toFixed(2)} Lps</h3>
-                            </div>
+                            <h5>Total de Gastos del Proyecto:</h5>
+                            <h3 className="text-primary">{totalExpenses.toFixed(2)} Lps</h3>
+
+                            {/* Cálculo del porcentaje de presupuesto utilizado */}
+                            {project.presupuesto > 0 && (
+                                <div>
+                                    <h5>Presupuesto Utilizado:</h5>
+                                    <h3
+                                        style={{
+                                            color: totalExpenses > project.presupuesto ? 'red' : 'green'
+                                        }}
+                                    >
+                                        {((totalExpenses / project.presupuesto) * 100).toFixed(2)}%
+                                    </h3>
+                                    {totalExpenses > project.presupuesto ? (
+                                        <p className="text-danger fw-bold">¡Has excedido el presupuesto!</p>
+                                    ) : (
+                                        <p className="text-success">Dentro del presupuesto</p>
+                                    )}
+                                </div>
+                            )}
+                        </div>
                         </>
                     )}
 
                     <div className="mt-4 text-center">
-                        <Button variant="secondary" onClick={() => navigate(-1)}>
+                        <Button variant="secondary" className="me-3" onClick={() => navigate(-1)}>
                             Regresar
+                        </Button>
+                        <Button variant="primary" onClick={() => navigate(`/proyectos/${id}/editar`)}>
+                            Actualizar Proyecto
                         </Button>
                     </div>
                 </>

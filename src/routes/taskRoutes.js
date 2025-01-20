@@ -24,6 +24,39 @@ router.post('/', authenticate, authorize(['admin', 'manager']), async (req, res)
             if (dependencyTasks.length !== dependencias.length) {
                 return res.status(400).json({ message: "Algunas dependencias no existen o no pertenecen al mismo proyecto." });
             }
+
+            // Verificar dependencias circulares
+            const hasCircularDependency = async (taskId, dependencias) => {
+                const visited = new Set();
+                const checkCycle = async (currentTaskId) => {
+                    if (visited.has(currentTaskId)) {
+                        return true; // Se detectó un ciclo
+                    }
+                    visited.add(currentTaskId);
+
+                    const task = await Task.findById(currentTaskId);
+                    if (!task) return false;
+
+                    for (const dep of task.dependencias) {
+                        if (await checkCycle(dep.toString())) {
+                            return true;
+                        }
+                    }
+                    visited.delete(currentTaskId);
+                    return false;
+                };
+
+                for (const dep of dependencias) {
+                    if (await checkCycle(dep.toString())) {
+                        return true;
+                    }
+                }
+                return false;
+            };
+
+            if (await hasCircularDependency(null, dependencias)) {
+                return res.status(400).json({ message: "Se ha detectado una dependencia circular." });
+            }
         }
 
         // Validar que las fechas de la tarea estén dentro del rango del proyecto
@@ -118,6 +151,54 @@ router.put('/:id', authenticate, authorize(['admin', 'manager']), async (req, re
             if (dependencyTasks.length !== dependencias.length) {
                 return res.status(400).json({ message: "Algunas dependencias no existen o no pertenecen al mismo proyecto." });
             }
+
+            // Verificar dependencias circulares
+            const hasCircularDependency = async (taskId, dependencias) => {
+                const visited = new Set();
+                const checkCycle = async (currentTaskId) => {
+                    if (visited.has(currentTaskId)) {
+                        return true; // Se detectó un ciclo
+                    }
+                    visited.add(currentTaskId);
+
+                    const task = await Task.findById(currentTaskId);
+                    if (!task) return false;
+
+                    for (const dep of task.dependencias) {
+                        if (await checkCycle(dep.toString())) {
+                            return true;
+                        }
+                    }
+                    visited.delete(currentTaskId);
+                    return false;
+                };
+
+                for (const dep of dependencias) {
+                    if (await checkCycle(dep.toString())) {
+                        return true;
+                    }
+                }
+                return false;
+            };
+
+            if (await hasCircularDependency(id, dependencias)) {
+                return res.status(400).json({ message: "Se ha detectado una dependencia circular." });
+            }
+        }
+
+        // Evitar marcar la tarea como Completado si tiene dependencias pendientes
+        if (status === 'Completado' && existingTask.dependencias.length > 0) {
+            const pendingDependencies = await Task.find({
+                _id: { $in: existingTask.dependencias },
+                status: { $ne: 'Completado' }
+            });
+
+            if (pendingDependencies.length > 0) {
+                return res.status(400).json({
+                    message: "No se puede completar la tarea hasta que todas las dependencias estén completadas.",
+                    pendingTasks: pendingDependencies.map(task => task.title)
+                });
+            }
         }
 
         // Validar que las fechas de la tarea estén dentro del rango del proyecto
@@ -180,5 +261,36 @@ router.delete('/:id', authenticate, authorize(['admin']), async (req, res) => {
         res.status(500).json({ message: 'Error al eliminar la tarea.', error });
     }
 });
+
+// Función para detectar dependencias circulares
+const hasCircularDependency = async (taskId, dependencias) => {
+    const visited = new Set();
+
+    const checkCycle = async (currentTaskId) => {
+        if (visited.has(currentTaskId)) {
+            return true; // Se ha encontrado un ciclo
+        }
+        visited.add(currentTaskId);
+
+        const task = await Task.findById(currentTaskId);
+        if (!task) return false;
+
+        for (const dep of task.dependencias) {
+            if (await checkCycle(dep.toString())) {
+                return true;
+            }
+        }
+        visited.delete(currentTaskId);
+        return false;
+    };
+
+    for (const dep of dependencias) {
+        if (await checkCycle(dep.toString())) {
+            return true;
+        }
+    }
+
+    return false;
+};
 
 module.exports = router;

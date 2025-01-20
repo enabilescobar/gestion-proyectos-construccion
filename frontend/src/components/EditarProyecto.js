@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Modal, Button } from 'react-bootstrap';
+import { Modal, Button, Table } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const EditarProyecto = () => {
@@ -27,6 +27,8 @@ const EditarProyecto = () => {
     const [isDeletingTask, setIsDeletingTask] = useState(true);
     const [showFacturasModal, setShowFacturasModal] = useState(false);
     const [facturas, setFacturas] = useState([]);
+    const [showDependencyModal, setShowDependencyModal] = useState(false);
+    const [dependencyMessage, setDependencyMessage] = useState('');
 
     useEffect(() => {
         fetchProyecto();
@@ -120,16 +122,24 @@ const EditarProyecto = () => {
             const url = isDeletingTask
                 ? `http://localhost:5000/api/tasks/${selectedItem._id}`
                 : `http://localhost:5000/api/gastos/${selectedItem._id}`;
-
+    
             await axios.delete(url, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-
+    
             setMessage(isDeletingTask ? 'Tarea eliminada con éxito.' : 'Gasto eliminado con éxito.');
             fetchProyecto();
         } catch (error) {
             console.error('Error al eliminar:', error);
-            setMessage('Error al eliminar el elemento.');
+            if (error.response && error.response.status === 400 && error.response.data.dependents) {
+                setDependencyMessage(
+                    `No se puede eliminar esta tarea porque otras tareas dependen de ella: 
+                     ${error.response.data.dependents.map(dep => dep.title).join(', ')}`
+                );
+                setShowDependencyModal(true);
+            } else {
+                setMessage('Error al eliminar el elemento.');
+            }
         } finally {
             setShowDeleteModal(false);
         }
@@ -277,7 +287,7 @@ const EditarProyecto = () => {
                                                 })
                                             }
                                         >
-                                            Eliminar
+                                            Quitar
                                         </button>
                                     </li>
                                 );
@@ -294,12 +304,13 @@ const EditarProyecto = () => {
                 >
                     Agregar Tarea
                 </button>
-                <table className="table table-bordered">
+                <Table striped bordered hover className="table table-bordered mb-4">
                     <thead>
                         <tr>
                             <th>Título</th>
                             <th>Descripción</th>
                             <th>Estado</th>
+                            <th>Dependencias</th>
                             <th>Acciones</th>
                         </tr>
                     </thead>
@@ -309,6 +320,17 @@ const EditarProyecto = () => {
                                 <td>{tarea.title}</td>
                                 <td>{tarea.description}</td>
                                 <td>{tarea.status}</td>
+                                <td>
+                                    {tarea.dependencias && tarea.dependencias.length > 0 ? (
+                                        <ul className="list-unstyled mb-0">
+                                            {tarea.dependencias.map(dep => (
+                                                <li key={dep._id}>{dep.title}</li>
+                                            ))}
+                                        </ul>
+                                    ) : (
+                                        <span className="text-muted">Sin dependencias</span>
+                                    )}
+                                </td>
                                 <td>
                                     <button className="btn btn-warning me-2" onClick={() => handleEdit(tarea, true)}>
                                         Editar
@@ -320,7 +342,7 @@ const EditarProyecto = () => {
                             </tr>
                         ))}
                     </tbody>
-                </table>
+                </Table>
 
                 <h4>Gastos</h4>
                 <button
@@ -329,7 +351,7 @@ const EditarProyecto = () => {
                 >
                     Agregar Gasto
                 </button>
-                <table className="table table-bordered">
+                <Table striped bordered hover className="table table-bordered mb-4">
                     <thead>
                         <tr>
                             <th>Categoría</th>
@@ -372,7 +394,7 @@ const EditarProyecto = () => {
                             </tr>
                         ))}
                     </tbody>
-                </table>
+                </Table>
 
                 {/* Modales */}
                 <Modal show={showFacturasModal} onHide={() => setShowFacturasModal(false)}>
@@ -410,6 +432,21 @@ const EditarProyecto = () => {
                     <Modal.Footer>
                         <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>Cancelar</Button>
                         <Button variant="danger" onClick={confirmDelete}>Aceptar</Button>
+                    </Modal.Footer>
+                </Modal>
+
+                // Modal para mostrar dependencias
+                <Modal show={showDependencyModal} onHide={() => setShowDependencyModal(false)}>
+                    <Modal.Header closeButton>
+                        <Modal.Title>No se puede eliminar la tarea</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        {dependencyMessage}
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="secondary" onClick={() => setShowDependencyModal(false)}>
+                            Cerrar
+                        </Button>
                     </Modal.Footer>
                 </Modal>
             </div>
