@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
-import Navbar from './Navbar';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const CambiarPasswordAdmin = () => {
@@ -13,7 +12,6 @@ const CambiarPasswordAdmin = () => {
     const handleSubmit = (e) => {
         e.preventDefault();
         if (newPassword === confirmPassword) {
-            // Aquí va el código para actualizar la contraseña
             setMessage('Contraseña cambiada correctamente.');
         } else {
             setMessage('Las contraseñas no coinciden.');

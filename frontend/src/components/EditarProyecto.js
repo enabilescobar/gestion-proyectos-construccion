@@ -165,9 +165,6 @@ const EditarProyecto = () => {
                 <button className="btn btn-outline-dark mb-3" onClick={handleBack}>
                     Regresar
                 </button>
-                <button className="btn btn-secondary mb-3"type="submit">
-                    Guardar Cambios
-                </button>
                 <h2 className="text-center mb-4">Editar Proyecto</h2>
                 {message && <div className="alert alert-info">{message}</div>}
 
@@ -294,6 +291,9 @@ const EditarProyecto = () => {
                             })}
                         </ul>
                     </div>
+                    <button className="btn btn-secondary mb-3"type="submit">
+                        Guardar Cambios
+                    </button>
                 </form>
 
                 {/* Tareas y Gastos: Mantienen su funcionalidad */}

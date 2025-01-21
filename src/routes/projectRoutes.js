@@ -98,22 +98,6 @@ router.get('/', authenticate, authorize(['admin', 'manager', 'user']), async (re
 });
 
 /**
- * Obtener un proyecto por ID
- */
-router.get('/:id', authenticate, authorize(['admin', 'manager', 'user']), async (req, res) => {
-    try {
-        const project = await Project.findById(req.params.id).populate('createdBy', 'username email');
-        if (!project) {
-            return res.status(404).json({ message: 'Proyecto no encontrado' });
-        }
-        res.status(200).json(project);
-    } catch (error) {
-        console.error('Error al obtener el proyecto:', error);
-        res.status(500).json({ message: 'Error al obtener el proyecto', error });
-    }
-});
-
-/**
  * Actualizar un proyecto
  */
 router.put('/:id', authenticate, authorize(['admin', 'manager']), async (req, res) => {
@@ -203,6 +187,83 @@ router.delete('/:id', authenticate, authorize(['admin']), async (req, res) => {
     } catch (error) {
         console.error('Error al eliminar el proyecto:', error);
         res.status(500).json({ message: 'Error al eliminar el proyecto', error });
+    }
+});
+
+// Obtener el avance de los proyectos
+router.get('/avance', authenticate, authorize(['admin', 'manager', 'user']), async (req, res) => {
+    try {
+        const projects = await Project.find({}, 'nombreProyecto avance status');
+        res.status(200).json(projects);
+    } catch (error) {
+        console.error('Error al obtener el avance de los proyectos:', error);
+        res.status(500).json({ message: 'Error al obtener el avance', error });
+    }
+});
+
+// Obtener el presupuesto de los proyectos
+router.get('/presupuesto', authenticate, authorize(['admin', 'manager']), async (req, res) => {
+    try {
+        const projects = await Project.find({}, 'nombreProyecto presupuesto status');
+
+        const gastos = await Gasto.aggregate([
+            { 
+                $group: { 
+                    _id: '$project', 
+                    totalGasto: { $sum: '$amount' } 
+                } 
+            }
+        ]);
+
+        console.log('Gastos agregados:', gastos);
+
+        const response = projects.map(project => {
+            const gasto = gastos.find(g => String(g._id) === String(project._id)) || { totalGasto: 0 };
+            return {
+                nombreProyecto: project.nombreProyecto,
+                presupuesto: project.presupuesto || 0,
+                utilizado: gasto.totalGasto || 0,
+                restante: (project.presupuesto || 0) - (gasto.totalGasto || 0),
+                status: project.status
+            };
+        });
+        
+        res.status(200).json(response);
+    } catch (error) {
+        console.error('Error al obtener el presupuesto de los proyectos:', error);
+        res.status(500).json({ message: 'Error al obtener el presupuesto', error });
+    }
+});
+
+// Obtener fechas importantes de los proyectos
+router.get('/fechas', authenticate, authorize(['admin', 'manager', 'user']), async (req, res) => {
+    try {
+        const projects = await Project.find({}, 'nombreProyecto fechaInicio fechaFin');
+        const fechas = projects.map(proyecto => ({
+            id: proyecto._id,
+            titulo: proyecto.nombreProyecto,
+            fechaInicio: proyecto.fechaInicio,
+            fechaFin: proyecto.fechaFin
+        }));
+
+        res.status(200).json(fechas);
+    } catch (error) {
+        console.error('Error al obtener las fechas de los proyectos:', error);
+        res.status(500).json({ message: 'Error al obtener las fechas', error });
+    }
+});
+
+// Obtener un proyecto por ID (debe ir después)
+router.get('/:id', authenticate, authorize(['admin', 'manager', 'user']), async (req, res) => {
+    try {
+        const project = await Project.findById(req.params.id).populate('createdBy', 'username email');
+        if (!project) {
+            return res.status(404).json({ message: 'Proyecto no encontrado' });
+        }
+        res.status(200).json(project);
+    } catch (error) {
+        console.error('Error al obtener el proyecto:', error);
+        res.status(500).json({ message: 'Error al obtener el proyecto', error });
     }
 });
 
