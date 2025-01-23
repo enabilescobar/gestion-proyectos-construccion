@@ -93,8 +93,8 @@ const ProyectoDetails = () => {
                         <p></p>
                         <p><strong>Descripción:</strong> {project?.descripcion}</p>
                         {userRole !== 'user' && <p><strong>Presupuesto:</strong> {project?.presupuesto}</p>}
-                        <p><strong>Fecha de Inicio:</strong> {new Date(project?.fechaInicio).toLocaleDateString()}</p>
-                        <p><strong>Fecha de Fin:</strong> {new Date(project?.fechaFin).toLocaleDateString()}</p>
+                        <p><strong>Fecha de Inicio:</strong> {new Date(project?.fechaInicio).toISOString().split('T')[0]}</p>
+                        <p><strong>Fecha de Fin:</strong> {new Date(project?.fechaFin).toISOString().split('T')[0]}</p>
                         <p><strong>Estado:</strong> {project?.status}</p>
                     </div>
 
@@ -119,8 +119,8 @@ const ProyectoDetails = () => {
                             {tasks.map((task) => (
                                 <tr key={task._id}>
                                     <td>{task.title}</td>
-                                    <td>{new Date(task.startDate).toLocaleDateString()}</td>
-                                    <td>{new Date(task.endDate).toLocaleDateString()}</td>
+                                    <td>{new Date(task.startDate).toISOString().split('T')[0]}</td>
+                                    <td>{new Date(task.endDate).toISOString().split('T')[0]}</td>
                                     <td>{task.status}</td>
                                     <td>
                                         {task.dependencias && task.dependencias.length > 0 ? (

@@ -71,14 +71,17 @@ const Home = () => {
                 setPresupuestoProyectos(presupuestoResponse.data || []);
 
                 const fechasResponse = await axios.get('http://localhost:5000/api/projects/fechas', config);
+                
+                // Procesar fechas para asegurarnos de que se envíen como objetos Date válidos
                 const eventosData = fechasResponse.data.map((event, index) => ({
                     id: event.id,
                     title: event.titulo,
-                    start: moment.utc(event.fechaInicio).toDate(),
-                    end: moment.utc(event.fechaFin).toDate(),
+                    start: new Date(new Date(event.fechaInicio).setDate(new Date(event.fechaInicio).getDate() + 1)), // Ajuste de un día
+                    end: new Date(new Date(event.fechaFin).setDate(new Date(event.fechaFin).getDate() + 1)),
                     projectId: event.id,
                     color: colorPalette[index % colorPalette.length]
                 }));
+                
                 setEvents(eventosData);
             } catch (error) {
                 console.error('Error al obtener datos de proyectos:', error);
