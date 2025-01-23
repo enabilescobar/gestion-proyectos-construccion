@@ -88,21 +88,25 @@ const Home = () => {
         fetchProjectData();
     }, []);
 
-    const proyectosEnProceso = avanceProyectos.filter(proyecto => 
+    const proyectosEnProceso = avanceProyectos.filter(proyecto =>
         proyecto.status?.trim().toLowerCase() === 'en proceso'
     );
-    
-    console.log("Proyectos en proceso filtrados:", proyectosEnProceso);
-    
+
     const proyectosPresupuesto = presupuestoProyectos
-    .filter(proyecto => 
-        proyecto?.status?.trim().toLowerCase() === 'pendiente' || 
-        proyecto?.status?.trim().toLowerCase() === 'en proceso'
-    )
-    .sort((a, b) => (a.status === 'En Proceso' ? -1 : 1));    
-    
-    console.log("Proyectos con presupuesto filtrados:", proyectosPresupuesto);
-    
+        .filter(proyecto =>
+            proyecto?.status?.trim().toLowerCase() === 'pendiente' ||
+            proyecto?.status?.trim().toLowerCase() === 'en proceso'
+        )
+        .sort((a, b) => (a.status === 'En Proceso' ? -1 : 1));
+
+    // Manejar clic en gráfica de avance
+    const handleAvanceClick = (_, elements) => {
+        if (elements.length > 0) {
+            const index = elements[0].index;
+            navigate(`/proyectos/${proyectosEnProceso[index]._id}`);
+        }
+    };
+
     return (
         <Container>
             <h2 className="my-4 text-center">Dashboard de Proyectos</h2>
@@ -110,7 +114,7 @@ const Home = () => {
             {proyectosEnProceso.length > 0 ? (
                 <Row>
                     <Col>
-                        <Card className="p-3">
+                        <Card className="p-3 mt-4">
                             <h4>Avance de Proyectos</h4>
                             <Bar
                                 data={{
@@ -123,7 +127,7 @@ const Home = () => {
                                 }}
                                 options={{
                                     indexAxis: 'y',
-                                    onClick: () => navigate('/proyectos-admin'),
+                                    onClick: handleAvanceClick,
                                     scales: { x: { max: 100, beginAtZero: true } }
                                 }}
                             />
@@ -140,8 +144,8 @@ const Home = () => {
             {userRole !== 'user' && proyectosPresupuesto.length > 0 && (
                 <Row className="mt-4">
                     {proyectosPresupuesto.map((proyecto, index) => (
-                        <Col md={6} key={index}>
-                            <Card className="p-3">
+                        <Col md={6} key={proyecto._id}>
+                            <Card className="p-3 mt-4">
                                 <h4>
                                     {proyecto.nombreProyecto}
                                     <span className={`badge ${proyecto.status === 'En Proceso' ? 'bg-success' : 'bg-warning'} ms-2`}>
@@ -156,13 +160,15 @@ const Home = () => {
                                         labels: ['Utilizado', 'Restante'],
                                         datasets: [{
                                             data: [
-                                                proyecto.utilizado || 0, 
+                                                proyecto.utilizado || 0,
                                                 Math.max(0, (proyecto.presupuesto || 0) - (proyecto.utilizado || 0))
                                             ],
                                             backgroundColor: ['#FF6384', '#36A2EB'],
                                         }],
                                     }}
-                                    options={{ onClick: () => navigate('/proyectos-admin') }}
+                                    options={{
+                                        onClick: () => navigate(`/proyectos/${proyecto._id}`)
+                                    }}
                                 />
                             </Card>
                         </Col>
@@ -173,7 +179,7 @@ const Home = () => {
             {userRole !== 'user' && (
                 <Row className="mt-4">
                     <Col>
-                        <Card className="p-3">
+                        <Card className="p-3 mt-4">
                             <h4>Calendario de Proyectos</h4>
                             <Calendar
                                 localizer={localizer}

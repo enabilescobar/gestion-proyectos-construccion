@@ -220,6 +220,7 @@ router.get('/presupuesto', authenticate, authorize(['admin', 'manager']), async 
         const response = projects.map(project => {
             const gasto = gastos.find(g => String(g._id) === String(project._id)) || { totalGasto: 0 };
             return {
+                _id: project._id,
                 nombreProyecto: project.nombreProyecto,
                 presupuesto: project.presupuesto || 0,
                 utilizado: gasto.totalGasto || 0,
