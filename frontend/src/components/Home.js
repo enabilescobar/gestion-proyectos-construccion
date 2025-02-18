@@ -32,6 +32,14 @@ ChartJS.register(
 
 const localizer = momentLocalizer(moment);
 const colorPalette = ['#FF6384', '#36A2EB', '#FFCE56', '#4CAF50', '#9966FF'];
+const statusColors = {
+    "Pendiente": "#FFC107",  // Amarillo
+    "En Proceso": "#4CAF50", // Verde
+    "Completado": "#2196F3", // Azul
+    "Suspendido": "#9E9E9E", // Gris
+    "Cancelado": "#F44336"   // Rojo
+};
+
 
 const Home = () => {
     const navigate = useNavigate();
@@ -39,6 +47,14 @@ const Home = () => {
     const [events, setEvents] = useState([]);
     const [avanceProyectos, setAvanceProyectos] = useState([]);
     const [presupuestoProyectos, setPresupuestoProyectos] = useState([]);
+    const [statusCounts, setStatusCounts] = useState({
+        "Pendiente": 0,
+        "En Proceso": 0,
+        "Completado": 0,
+        "Suspendido": 0,
+        "Cancelado": 0
+    });
+    
 
     useEffect(() => {
         const token = localStorage.getItem('authToken');
@@ -69,6 +85,18 @@ const Home = () => {
 
                 const presupuestoResponse = await axios.get('http://localhost:5000/api/projects/presupuesto', config);
                 setPresupuestoProyectos(presupuestoResponse.data || []);
+                const projectsResponse = await axios.get('http://localhost:5000/api/projects', config);
+                const projects = projectsResponse.data || [];
+                
+                // Contar proyectos por estado
+                const counts = { "Pendiente": 0, "En Proceso": 0, "Completado": 0, "Suspendido": 0, "Cancelado": 0 };
+                projects.forEach(proyecto => {
+                    if (proyecto.status in counts) {
+                        counts[proyecto.status]++;
+                    }
+                });
+                
+                setStatusCounts(counts);
 
                 const fechasResponse = await axios.get('http://localhost:5000/api/projects/fechas', config);
                 
@@ -113,6 +141,19 @@ const Home = () => {
     return (
         <Container>
             <h2 className="my-4 text-center">Dashboard de Proyectos</h2>
+
+            {userRole !== 'user' && (
+                <Row className="mb-4">
+                    {Object.entries(statusCounts).map(([status, count]) => (
+                        <Col key={status} md={2}>
+                            <Card className="p-3 text-center shadow-sm" style={{ backgroundColor: statusColors[status], color: 'white', borderRadius: '10px' }}>
+                                <h3>{count}</h3>
+                                <p style={{ fontWeight: 'bold', margin: 0 }}>{status}</p>
+                            </Card>
+                        </Col>
+                    ))}
+                </Row>
+            )}
 
             {proyectosEnProceso.length > 0 ? (
                 <Row>

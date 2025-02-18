@@ -80,17 +80,22 @@ const EditarGasto = () => {
     const handleDeleteFactura = async (facturaId) => {
         try {
             const token = localStorage.getItem('authToken');
-            await axios.delete(`http://localhost:5000/api/gastos/${gastoId}/facturas/${facturaId}`, {
+            const response = await axios.delete(`http://localhost:5000/api/gastos/${gastoId}/facturas/${facturaId}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            setExistingFacturas(existingFacturas.filter((factura) => factura._id !== facturaId));
-            setMessage('Factura eliminada con éxito');
+    
+            if (response.status === 200) {
+                setExistingFacturas(existingFacturas.filter((factura) => factura._id !== facturaId));
+                setMessage('Factura eliminada con éxito');
+            } else {
+                setMessage(`Error inesperado: ${response.data.message || 'No se pudo eliminar la factura'}`);
+            }
         } catch (error) {
-            console.error('Error al eliminar la factura:', error);
-            setMessage('Error al eliminar la factura');
+            console.error('Error al eliminar la factura:', error.response?.data || error.message);
+            setMessage(`Error al eliminar la factura: ${error.response?.data?.message || error.message}`);
         }
     };
-
+        
     return (
         <div>
             <div className="container mt-5">

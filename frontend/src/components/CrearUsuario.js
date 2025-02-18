@@ -12,12 +12,25 @@ const CrearUsuario = () => {
         confirmPassword: '',
         role: 'user',
         isActive: true,
+        nombre: '',
+        apellido: '',
+        direccion: '',
+        telefono: '', // Campo para el número telefónico
+        fechaNacimiento: '', // Campo para la fecha de nacimiento
     });
     const [message, setMessage] = useState('');
+    const [phoneError, setPhoneError] = useState(''); // Mensaje de error del teléfono
     const navigate = useNavigate();
 
     const handleFormSubmit = async (e) => {
         e.preventDefault();
+
+        // Validación del teléfono si no está vacío
+        if (formData.telefono && !/^\d{8}$/.test(formData.telefono)) {
+            setPhoneError('El número telefónico debe tener exactamente 8 dígitos y no contener signos ni espacios.');
+            return;
+        }
+
         const token = localStorage.getItem('authToken');
 
         if (!token) {
@@ -32,7 +45,7 @@ const CrearUsuario = () => {
 
         try {
             const newUser = { ...formData };
-            delete newUser.confirmPassword;
+            delete newUser.confirmPassword; // Eliminar confirmación de contraseña del envío
             await axios.post('http://localhost:5000/api/users/register', newUser, {
                 headers: { Authorization: `Bearer ${token}` },
             });
@@ -48,6 +61,12 @@ const CrearUsuario = () => {
         }
     };
 
+    const handlePhoneChange = (e) => {
+        const value = e.target.value;
+        setPhoneError(''); // Limpiar el error cuando el usuario comienza a escribir
+        setFormData({ ...formData, telefono: value });
+    };
+
     return (
         <div>
             <div className="container mt-5">
@@ -56,6 +75,26 @@ const CrearUsuario = () => {
                 <form onSubmit={handleFormSubmit}>
                     <div className="mb-3">
                         <label>Nombre</label>
+                        <input
+                            type="text"
+                            className="form-control"
+                            value={formData.nombre}
+                            onChange={(e) => setFormData({ ...formData, nombre: e.target.value })}
+                            required
+                        />
+                    </div>
+                    <div className="mb-3">
+                        <label>Apellido</label>
+                        <input
+                            type="text"
+                            className="form-control"
+                            value={formData.apellido}
+                            onChange={(e) => setFormData({ ...formData, apellido: e.target.value })}
+                            required
+                        />
+                    </div>
+                    <div className="mb-3">
+                        <label>Nombre de Usuario</label>
                         <input
                             type="text"
                             className="form-control"
@@ -73,6 +112,47 @@ const CrearUsuario = () => {
                             onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                             required
                         />
+                    </div>
+                    <div className="mb-3">
+                        <label>
+                            Teléfono <span className="text-muted">(opcional, 8 dígitos, sin signos ni espacios)</span>
+                        </label>
+                        <input
+                            type="text"
+                            className={`form-control ${phoneError ? 'is-invalid' : ''}`}
+                            value={formData.telefono}
+                            onChange={handlePhoneChange}
+                        />
+                        {phoneError && <div className="invalid-feedback">{phoneError}</div>}
+                    </div>
+                    <div className="mb-3">
+                        <label>Dirección</label>
+                        <textarea
+                            className="form-control"
+                            value={formData.direccion}
+                            onChange={(e) => setFormData({ ...formData, direccion: e.target.value })}
+                        ></textarea>
+                    </div>
+                    <div className="mb-3">
+                        <label>Fecha de Nacimiento</label>
+                        <input
+                            type="date"
+                            className="form-control"
+                            value={formData.fechaNacimiento}
+                            onChange={(e) => setFormData({ ...formData, fechaNacimiento: e.target.value })}
+                        />
+                    </div>
+                    <div className="mb-3">
+                        <label>Rol</label>
+                        <select
+                            className="form-control"
+                            value={formData.role}
+                            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+                        >
+                            <option value="user">Usuario</option>
+                            <option value="manager">Manager</option>
+                            <option value="admin">Admin</option>
+                        </select>
                     </div>
                     <div className="mb-3">
                         <label>Contraseña</label>
@@ -95,18 +175,6 @@ const CrearUsuario = () => {
                         />
                     </div>
                     <div className="mb-3">
-                        <label>Rol</label>
-                        <select
-                            className="form-control"
-                            value={formData.role}
-                            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                        >
-                            <option value="user">Usuario</option>
-                            <option value="manager">Manager</option>
-                            <option value="admin">Admin</option>
-                        </select>
-                    </div>
-                    <div className="mb-3">
                         <input
                             type="checkbox"
                             checked={formData.isActive}
@@ -118,7 +186,11 @@ const CrearUsuario = () => {
                         <button type="submit" className="btn btn-primary">
                             Guardar
                         </button>
-                        <button type="button" className="btn btn-secondary" onClick={() => navigate('/AdministrarUsuarios')}>
+                        <button
+                            type="button"
+                            className="btn btn-secondary"
+                            onClick={() => navigate('/AdministrarUsuarios')}
+                        >
                             Cancelar
                         </button>
                     </div>

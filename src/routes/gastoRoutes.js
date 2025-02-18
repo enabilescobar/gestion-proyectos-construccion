@@ -3,6 +3,7 @@ const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
 const Gasto = require('../models/gastos');
+const { registrarActividad } = require('../controllers/bitacoraController');
 const authenticate = require('../middleware/authenticate');
 const authorize = require('../middleware/auth');
 const router = express.Router();
@@ -100,6 +101,9 @@ router.post('/', authenticate, authorize(['admin', 'manager']), upload.array('fa
 
         const gastoGuardado = await nuevoGasto.save();
 
+        // Registrar actividad en la bitácora
+        await registrarActividad(req.user.id, 'Creación de gasto', `Gasto creado: "${description}" por un monto de ${amount}.`);
+
         // Responder con éxito
         res.status(201).json({ message: 'Gasto creado con éxito', gasto: gastoGuardado });
     } catch (error) {
@@ -122,6 +126,15 @@ router.put('/:id', authenticate, authorize(['admin', 'manager']), upload.array('
             return res.status(404).json({ message: 'Gasto no encontrado' });
         }
 
+        // Detectar cambios en los campos del gasto
+        let cambios = [];
+        if (gasto.description !== description) cambios.push(`Descripción actualizada`);
+        if (gasto.amount !== parseFloat(amount)) cambios.push(`Monto cambiado de ${gasto.amount} a ${amount}`);
+        if (gasto.category !== category) cambios.push(`Categoría cambiada de "${gasto.category}" a "${category}"`);
+        if (gasto.date.toISOString() !== new Date(date).toISOString()) cambios.push(`Fecha actualizada`);
+        if (gasto.doneBy !== doneBy) cambios.push(`Responsable cambiado de "${gasto.doneBy}" a "${doneBy}"`);
+
+        // Eliminar facturas indicadas
         if (deleteFacturas) {
             deleteFacturas.forEach(facturaId => {
                 const factura = gasto.facturas.id(facturaId);
@@ -135,11 +148,13 @@ router.put('/:id', authenticate, authorize(['admin', 'manager']), upload.array('
             });
         }
 
+        // Procesar nuevas facturas
         const nuevasFacturas = req.files.map(file => ({
             nombre: file.originalname,
             ruta: path.relative(path.join(__dirname, '..'), file.path)
         }));
 
+        // Actualizar los campos del gasto
         gasto.description = description;
         gasto.amount = amount;
         gasto.category = category;
@@ -149,6 +164,14 @@ router.put('/:id', authenticate, authorize(['admin', 'manager']), upload.array('
         gasto.facturas.push(...nuevasFacturas);
 
         const gastoActualizado = await gasto.save();
+
+        // Registrar actividad en la bitácora
+        if (cambios.length > 0) {
+            await registrarActividad(req.user.id, 'Actualización de gasto', `Gasto actualizado: ${cambios.join(', ')}`);
+        } else {
+            await registrarActividad(req.user.id, 'Actualización de gasto', `Se intentó actualizar el gasto "${description}" sin cambios.`);
+        }
+
         res.status(200).json({ message: 'Gasto actualizado con éxito', gasto: gastoActualizado });
     } catch (error) {
         console.error('Error al actualizar el gasto:', error);
@@ -159,6 +182,7 @@ router.put('/:id', authenticate, authorize(['admin', 'manager']), upload.array('
 // Eliminar un gasto y sus archivos adjuntos
 router.delete('/:id', authenticate, authorize(['admin']), async (req, res) => {
     try {
+        // Buscar el gasto por ID
         const gasto = await Gasto.findById(req.params.id);
 
         if (!gasto) {
@@ -166,20 +190,33 @@ router.delete('/:id', authenticate, authorize(['admin']), async (req, res) => {
         }
 
         // Eliminar archivos asociados al gasto
-        gasto.facturas.forEach(factura => {
-            const filePath = path.join(__dirname, '..', factura.ruta);
-            if (fs.existsSync(filePath)) {
-                fs.unlinkSync(filePath); // Eliminar archivo del servidor
-            }
-        });
+        if (gasto.facturas && gasto.facturas.length > 0) {
+            gasto.facturas.forEach(factura => {
+                const filePath = path.join(__dirname, '..', factura.ruta);
+                if (fs.existsSync(filePath)) {
+                    try {
+                        fs.unlinkSync(filePath); // Eliminar archivo físicamente del servidor
+                    } catch (err) {
+                        console.error(`Error al eliminar archivo ${filePath}:`, err);
+                    }
+                }
+            });
+        }
 
-        // Eliminar el gasto usando findByIdAndDelete
+        // Eliminar el gasto de la base de datos
         await Gasto.findByIdAndDelete(req.params.id);
+
+        // Registrar actividad en la bitácora
+        await registrarActividad(
+            req.user.id,
+            'Eliminación de gasto',
+            `Gasto eliminado: "${gasto.description}" por un monto de ${gasto.amount}.`
+        );
 
         res.status(200).json({ message: 'Gasto eliminado con éxito' });
     } catch (error) {
         console.error('Error al eliminar el gasto:', error);
-        res.status(500).json({ message: 'Error al eliminar el gasto', error: error.message });
+        res.status(500).json({ message: 'Error al eliminar el gasto.', error: error.message });
     }
 });
 
@@ -201,17 +238,28 @@ router.delete('/facturas/:facturaId', authenticate, authorize(['admin', 'manager
         // Eliminar el archivo físicamente del servidor
         const filePath = path.join(__dirname, '..', factura.ruta);
         if (fs.existsSync(filePath)) {
-            fs.unlinkSync(filePath);
+            try {
+                fs.unlinkSync(filePath);
+            } catch (err) {
+                console.error(`Error al eliminar archivo ${filePath}:`, err);
+            }
         }
 
         // Eliminar la factura de la base de datos
         gasto.facturas = gasto.facturas.filter(f => f._id.toString() !== facturaId);
         await gasto.save();
 
+        // Registrar actividad en la bitácora
+        await registrarActividad(
+            req.user.id,
+            'Eliminación de factura',
+            `Factura "${factura.nombre}" eliminada del gasto "${gasto.description}".`
+        );
+
         res.status(200).json({ message: 'Factura eliminada correctamente' });
     } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Error al eliminar la factura' });
+        console.error('Error al eliminar la factura:', error);
+        res.status(500).json({ message: 'Error al eliminar la factura.' });
     }
 });
 

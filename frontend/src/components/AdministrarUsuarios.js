@@ -4,13 +4,14 @@ import axios from 'axios';
 import { Table, Button, Modal } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { useNavigate } from 'react-router-dom';
-import { jwtDecode } from 'jwt-decode'; 
+import { jwtDecode } from 'jwt-decode';
 
 const AdministrarUsuarios = () => {
     const [usuarios, setUsuarios] = useState([]);
-    const [userRole, setUserRole] = useState(''); 
+    const [userRole, setUserRole] = useState('');
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [selectedUser, setSelectedUser] = useState(null);
+    const [showMessageModal, setShowMessageModal] = useState(false);
     const [message, setMessage] = useState('');
     const navigate = useNavigate();
 
@@ -37,14 +38,14 @@ const AdministrarUsuarios = () => {
                 setUserRole(decodedToken.role);
                 if (decodedToken.role === 'user') {
                     setMessage('No tienes permisos para acceder a esta página.');
-                    setTimeout(() => navigate('/home'), 3000); // Redirigir al Home después de 3 segundos
+                    setTimeout(() => navigate('/home'), 3000);
                 }
             } catch (error) {
                 console.error('Error al decodificar el token:', error);
-                navigate('/login'); // Redirigir al login si hay error con el token
+                navigate('/login');
             }
         } else {
-            navigate('/login'); // Redirigir al login si no hay token
+            navigate('/login');
         }
     };
 
@@ -65,13 +66,19 @@ const AdministrarUsuarios = () => {
             await axios.delete(`http://localhost:5000/api/users/${selectedUser._id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
-            setMessage('Usuario eliminado con éxito.');
+            setMessage(`Usuario "${selectedUser.nombre} ${selectedUser.apellido}" eliminado con éxito.`);
             setShowDeleteModal(false);
-            fetchUsuarios();
+            setShowMessageModal(true); // Mostrar modal de confirmación
         } catch (error) {
             console.error('Error al eliminar el usuario:', error);
             setMessage('Error al eliminar el usuario.');
+            setShowDeleteModal(false);
         }
+    };
+
+    const closeMessageModal = () => {
+        setShowMessageModal(false);
+        fetchUsuarios(); // Actualizar la lista de usuarios
     };
 
     const handleChangePassword = (userId) => {
@@ -81,96 +88,101 @@ const AdministrarUsuarios = () => {
     return (
         <div>
             <div className="container mt-5">
-                {message && <div className="alert alert-info">{message}</div>}
-                {!message && (
-                    <>
-                        <h2 className="mb-4">Administrar Usuarios</h2>
+                <h2 className="mb-4">Administrar Usuarios</h2>
 
-                        {/* Mostrar el botón Crear Usuario solo para admin y manager */}
-                        {(userRole === 'admin' || userRole === 'manager') && (
-                            <Button
-                                variant="success"
-                                className="mb-3"
-                                onClick={() => navigate('/CrearUsuario')}
-                            >
-                                Crear Usuario
-                            </Button>
-                        )}
-                        <Button
-                            variant="outline-dark"
-                            className="mb-3 ms-3"
-                            onClick={() => navigate('/home')}
-                        >
-                            Regresar
-                        </Button>
-
-                        <Table striped bordered hover className="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>Nombre</th>
-                                    <th>Email</th>
-                                    <th>Rol</th>
-                                    <th>Estado</th>
-                                    <th>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {usuarios.map((user) => (
-                                    <tr key={user._id}>
-                                        <td>{user.username}</td>
-                                        <td>{user.email}</td>
-                                        <td>{user.role}</td>
-                                        <td>{user.isActive ? 'Activo' : 'Inactivo'}</td>
-                                        <td>
-                                            {/* Deshabilitar acciones para usuarios con rol user */}
-                                            {/*<Button
-                                                variant="warning"
-                                                size="sm"
-                                                disabled={userRole === 'user'}
-                                            >
-                                                Editar
-                                            </Button>{' '}*/}
-                                            <Button
-                                                variant="danger"
-                                                size="sm"
-                                                onClick={() => handleDeleteUser(user)}
-                                                disabled={userRole === 'user'}
-                                            >
-                                                Eliminar
-                                            </Button>{' '}
-                                            <Button
-                                                variant="secondary"
-                                                size="sm"
-                                                onClick={() => handleChangePassword(user._id)}
-                                                disabled={userRole === 'user'}
-                                            >
-                                                Cambiar Contraseña
-                                            </Button>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </Table>
-
-                        {/* Modal de Confirmación para Eliminar */}
-                        <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
-                            <Modal.Header closeButton>
-                                <Modal.Title>Confirmar Eliminación</Modal.Title>
-                            </Modal.Header>
-                            <Modal.Body>
-                                ¿Está seguro que desea eliminar al usuario "{selectedUser?.username}"?
-                            </Modal.Body>
-                            <Modal.Footer>
-                                <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-                                    Cancelar
-                                </Button>
-                                <Button variant="danger" onClick={confirmDeleteUser}>
-                                    Eliminar
-                                </Button>
-                            </Modal.Footer>
-                        </Modal>
-                    </>
+                {/* Botones */}
+                {(userRole === 'admin' || userRole === 'manager') && (
+                    <Button
+                        variant="success"
+                        className="mb-3"
+                        onClick={() => navigate('/CrearUsuario')}
+                    >
+                        Crear Usuario
+                    </Button>
                 )}
+                <Button
+                    variant="outline-dark"
+                    className="mb-3 ms-3"
+                    onClick={() => navigate('/home')}
+                >
+                    Regresar
+                </Button>
+
+                {/* Tabla */}
+                <Table striped bordered hover className="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Apellido</th>
+                            <th>Correo</th>
+                            <th>Teléfono</th>
+                            <th>Rol</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {usuarios.map((user) => (
+                            <tr key={user._id}>
+                                <td>{user.nombre || 'N/A'}</td>
+                                <td>{user.apellido || 'N/A'}</td>
+                                <td>{user.email}</td>
+                                <td>{user.telefono || 'N/A'}</td>
+                                <td>{user.role}</td>
+                                <td>{user.isActive ? 'Activo' : 'Inactivo'}</td>
+                                <td>
+                                    <Button
+                                        variant="danger"
+                                        size="sm"
+                                        onClick={() => handleDeleteUser(user)}
+                                        disabled={userRole === 'user'}
+                                    >
+                                        Eliminar
+                                    </Button>{' '}
+                                    <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        onClick={() => handleChangePassword(user._id)}
+                                        disabled={userRole === 'user'}
+                                    >
+                                        Cambiar Contraseña
+                                    </Button>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </Table>
+
+                {/* Modal de Confirmación para Eliminar */}
+                <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
+                    <Modal.Header closeButton>
+                        <Modal.Title>Confirmar Eliminación</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        ¿Está seguro que desea eliminar al usuario "{selectedUser?.nombre} {selectedUser?.apellido}"?
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+                            Cancelar
+                        </Button>
+                        <Button variant="danger" onClick={confirmDeleteUser}>
+                            Eliminar
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
+
+                {/* Modal de Mensaje de Confirmación */}
+                <Modal show={showMessageModal} onHide={closeMessageModal}>
+                    <Modal.Header closeButton>
+                        <Modal.Title>Acción Completada</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>{message}</Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="primary" onClick={closeMessageModal}>
+                            Cerrar
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
             </div>
         </div>
     );

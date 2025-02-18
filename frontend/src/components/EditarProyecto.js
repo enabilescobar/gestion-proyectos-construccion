@@ -435,7 +435,7 @@ const EditarProyecto = () => {
                     </Modal.Footer>
                 </Modal>
 
-                // Modal para mostrar dependencias
+                {/* Modal para mostrar dependencias*/}
                 <Modal show={showDependencyModal} onHide={() => setShowDependencyModal(false)}>
                     <Modal.Header closeButton>
                         <Modal.Title>No se puede eliminar la tarea</Modal.Title>

@@ -1,8 +1,9 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const { registrarActividad } = require('../controllers/bitacoraController');
 const Project = require('../models/projects');
 const Task = require('../models/tasks'); 
-const Gasto = require('../models/gastos'); 
+const Gasto = require('../models/gastos');
 const authorize = require('../middleware/auth');
 const authenticate = require('../middleware/authenticate'); 
 const router = express.Router();
@@ -70,6 +71,9 @@ router.post('/', authenticate, authorize(['admin', 'manager']), async (req, res)
             createdBy,
         });
 
+        // Registrar actividad en la bitácora
+        await registrarActividad(req.user.id, 'Creación de proyecto', `Proyecto "${nombreProyecto}" creado exitosamente.`);
+
         const savedProject = await newProject.save();
         res.status(201).json({ message: 'Proyecto creado con éxito', project: savedProject });
     } catch (error) {
@@ -112,6 +116,23 @@ router.put('/:id', authenticate, authorize(['admin', 'manager']), async (req, re
             return res.status(400).json({ message: 'La fecha de inicio debe ser anterior a la fecha de fin.' });
         }
 
+        // Obtener el proyecto antes de la actualización
+        const existingProject = await Project.findById(req.params.id);
+        if (!existingProject) {
+            return res.status(404).json({ message: 'Proyecto no encontrado' });
+        }
+
+        // Detectar cambios en el proyecto
+        let cambios = [];
+        if (existingProject.nombreProyecto !== nombreProyecto) cambios.push(`Nombre cambiado de "${existingProject.nombreProyecto}" a "${nombreProyecto}"`);
+        if (existingProject.descripcion !== descripcion) cambios.push(`Descripción actualizada`);
+        if (existingProject.fechaInicio.toISOString() !== new Date(fechaInicio).toISOString()) cambios.push(`Fecha de inicio actualizada`);
+        if (existingProject.fechaFin && fechaFin && existingProject.fechaFin.toISOString() !== new Date(fechaFin).toISOString()) cambios.push(`Fecha de fin actualizada`);
+        if (existingProject.status !== status) cambios.push(`Estado cambiado de "${existingProject.status}" a "${status}"`);
+        if (existingProject.presupuesto !== presupuesto) cambios.push(`Presupuesto cambiado de "${existingProject.presupuesto}" a "${presupuesto}"`);
+        if (JSON.stringify(existingProject.equipoTrabajo) !== JSON.stringify(equipoTrabajo)) cambios.push(`Equipo de trabajo actualizado`);
+
+        // Actualizar el proyecto
         const updatedProject = await Project.findByIdAndUpdate(
             req.params.id,
             { nombreProyecto, descripcion, fechaInicio, fechaFin, status, presupuesto, equipoTrabajo },
@@ -122,6 +143,15 @@ router.put('/:id', authenticate, authorize(['admin', 'manager']), async (req, re
             return res.status(404).json({ message: 'Proyecto no encontrado' });
         }
 
+        // Registrar cambios específicos en la bitácora
+        if (cambios.length > 0) {
+            console.log('Registrando cambios en la bitácora:', cambios);
+            await registrarActividad(req.user.id, 'Actualización de proyecto', `Proyecto "${nombreProyecto}" actualizado: ${cambios.join(', ')}`);
+        } else {
+            console.log('Intento de actualización sin cambios detectados');
+            await registrarActividad(req.user.id, 'Actualización de proyecto', `Se intentó actualizar el proyecto "${nombreProyecto}" sin cambios.`);
+        }
+        
         res.status(200).json({ message: 'Proyecto actualizado con éxito', project: updatedProject });
     } catch (error) {
         console.error('Error al actualizar el proyecto:', error);
@@ -182,6 +212,9 @@ router.delete('/:id', authenticate, authorize(['admin']), async (req, res) => {
         if (!deletedProject) {
             return res.status(404).json({ message: 'Proyecto no encontrado' });
         }
+
+         // Registrar actividad en la bitácora
+         await registrarActividad(req.user.id, 'Eliminación de proyecto', `Proyecto eliminado.`);
 
         res.status(200).json({ message: 'Proyecto, tareas y gastos relacionados eliminados con éxito' });
     } catch (error) {

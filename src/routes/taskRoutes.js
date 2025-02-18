@@ -3,6 +3,7 @@ const express = require('express');
 const Task = require('../models/tasks');
 const Project = require('../models/projects');
 const User = require('../models/users');
+const { registrarActividad } = require('../controllers/bitacoraController');
 const authenticate = require('../middleware/authenticate');
 const authorize = require('../middleware/auth');
 const router = express.Router();
@@ -89,6 +90,10 @@ router.post('/', authenticate, authorize(['admin', 'manager']), async (req, res)
         });
 
         await newTask.save();
+
+        // Registrar actividad en la bitácora
+        await registrarActividad(req.user.id, 'Creación de tarea', `Se creó la tarea "${title}" en el proyecto "${project}".`);
+
         res.status(201).json({ message: "Tarea creada con éxito", task: newTask });
     } catch (error) {
         console.error("Error al crear la tarea", error);
@@ -218,12 +223,33 @@ router.put('/:id', authenticate, authorize(['admin', 'manager']), async (req, re
             return res.status(400).json({ message: "La fecha de inicio debe ser anterior o igual a la fecha de fin." });
         }
 
+        // Detectar cambios en la tarea antes de actualizar
+        let cambios = [];
+        if (existingTask.title !== title) cambios.push(`Título cambiado de "${existingTask.title}" a "${title}"`);
+        if (existingTask.description !== description) cambios.push(`Descripción actualizada`);
+        if (existingTask.status !== status) cambios.push(`Estado cambiado de "${existingTask.status}" a "${status}"`);
+        if (existingTask.startDate.toISOString() !== new Date(startDate).toISOString()) cambios.push(`Fecha de inicio actualizada`);
+        if (existingTask.endDate && endDate && existingTask.endDate.toISOString() !== new Date(endDate).toISOString()) cambios.push(`Fecha de fin actualizada`);
+        if (JSON.stringify(existingTask.assignedTo) !== JSON.stringify(assignedTo)) cambios.push(`Responsable actualizado`);
+        if (JSON.stringify(existingTask.dependencias) !== JSON.stringify(dependencias)) cambios.push(`Dependencias actualizadas`);
+
         // Actualizar la tarea
         const updatedTask = await Task.findByIdAndUpdate(
             id,
             { title, description, status, startDate, endDate, assignedTo, dependencias },
             { new: true }
         );
+
+        if (!updatedTask) {
+            return res.status(404).json({ message: "Tarea no encontrada" });
+        }
+
+        // Registrar cambios en la bitácora
+        if (cambios.length > 0) {
+            await registrarActividad(req.user.id, 'Actualización de tarea', `Tarea "${title}" actualizada: ${cambios.join(', ')}`);
+        } else {
+            await registrarActividad(req.user.id, 'Actualización de tarea', `Se intentó actualizar la tarea "${title}" sin cambios.`);
+        }
 
         res.status(200).json({ message: "Tarea actualizada con éxito", task: updatedTask });
     } catch (error) {
@@ -254,6 +280,9 @@ router.delete('/:id', authenticate, authorize(['admin']), async (req, res) => {
         if (!deletedTask) {
             return res.status(404).json({ message: 'Tarea no encontrada.' });
         }
+
+        // Registrar actividad en la bitácora
+        await registrarActividad(req.user.id, 'Eliminación de tarea', `Se eliminó la tarea "${deletedTask.title}".`);
 
         res.status(200).json({ message: 'Tarea eliminada con éxito.' });
     } catch (error) {
