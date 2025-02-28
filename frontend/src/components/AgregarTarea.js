@@ -96,10 +96,10 @@ const AgregarTarea = () => {
             <div className="container mt-5">
                 <h2 className="text-center mb-4">Agregar Tarea al Proyecto: {projectData.name}</h2>
                 <p className="text-center">
-                    <strong>Fecha de Inicio del Proyecto:</strong> {new Date(projectData.start).toLocaleDateString('es-ES')}
+                    <strong>Fecha de Inicio del Proyecto:</strong> {projectData.start ? new Date(projectData.start).toISOString().split('T')[0] : ''}
                 </p>
                 <p className="text-center">
-                    <strong>Fecha de Finalización del Proyecto:</strong> {new Date(projectData.end).toLocaleDateString('es-ES')}
+                    <strong>Fecha de Finalización del Proyecto:</strong> {projectData.end ? new Date(projectData.end).toISOString().split('T')[0] : ''}
                 </p>
                 {message && <div className="alert alert-info">{message}</div>}
 
@@ -200,8 +200,9 @@ const AgregarTarea = () => {
                                 <td>{tarea.description}</td>
                                 <td>{tarea.status}</td>
                                 <td>
-                                    {new Date(tarea.startDate).toLocaleDateString()} - 
-                                    {tarea.endDate ? new Date(tarea.endDate).toLocaleDateString() : 'No definida'}
+                                    {tarea.startDate ? new Date(tarea.startDate).toISOString().split('T')[0] : ''}
+                                     --- 
+                                    {tarea.endDate ? new Date(tarea.endDate).toISOString().split('T')[0] : 'No definida'}
                                 </td>
                                 <td>
                                     {tarea.dependencias && tarea.dependencias.length > 0 ? (

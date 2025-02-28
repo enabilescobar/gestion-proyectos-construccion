@@ -12,6 +12,16 @@ const projectSchema = new mongoose.Schema({
         enum: ['Pendiente', 'Completado', 'En Proceso', 'Suspendido', 'Cancelado'], 
         default: 'Pendiente' 
     },
+    prioridad: { 
+        type: String, 
+        enum: ['Alta', 'Media', 'Baja'], 
+        default: 'Media' 
+    },
+    divisa: { 
+        type: String, 
+        enum: ['LPS', 'USD'], 
+        default: 'LPS' 
+    },
     encargado: { 
         type: mongoose.Schema.Types.ObjectId, 
         ref: 'User', 

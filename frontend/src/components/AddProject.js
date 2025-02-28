@@ -11,6 +11,8 @@ const AddProject = () => {
     const [presupuesto, setPresupuesto] = useState('');
     const [usuarios, setUsuarios] = useState([]);
     const [encargado, setEncargado] = useState('');
+    const [prioridad, setPrioridad] = useState('Media'); // Nuevo estado con valor por defecto
+    const [divisa, setDivisa] = useState('LPS'); // Nuevo estado con valor por defecto
     const [equipoTrabajo, setEquipoTrabajo] = useState([]); // Array de usuarios seleccionados para el equipo de trabajo
     const [message, setMessage] = useState('');
     const navigate = useNavigate();
@@ -63,9 +65,11 @@ const AddProject = () => {
                 fechaFin, 
                 presupuesto, 
                 encargado, 
-                equipoTrabajo 
+                equipoTrabajo,
+                prioridad, // Se agrega prioridad
+                divisa // Se agrega divisa
             };
-
+            
             // Enviar la solicitud con el token en las cabeceras
             const response = await axios.post('http://localhost:5000/api/projects', newProject, {
                 headers: { Authorization: `Bearer ${token}` },
@@ -155,6 +159,35 @@ const AddProject = () => {
                         onChange={(e) => setPresupuesto(e.target.value)}
                         required
                     />
+                </div>
+
+                <div className="mb-3">
+                    <label htmlFor="prioridad" className="form-label">Prioridad</label>
+                    <select
+                        className="form-control"
+                        id="prioridad"
+                        value={prioridad}
+                        onChange={(e) => setPrioridad(e.target.value)}
+                        required
+                    >
+                        <option value="Alta">Alta</option>
+                        <option value="Media">Media</option>
+                        <option value="Baja">Baja</option>
+                    </select>
+                </div>
+
+                <div className="mb-3">
+                    <label htmlFor="divisa" className="form-label">Divisa</label>
+                    <select
+                        className="form-control"
+                        id="divisa"
+                        value={divisa}
+                        onChange={(e) => setDivisa(e.target.value)}
+                        required
+                    >
+                        <option value="LPS">Lempiras (LPS)</option>
+                        <option value="USD">Dólares (USD)</option>
+                    </select>
                 </div>
 
                 {/* Campo para el encargado (manager) */}

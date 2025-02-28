@@ -43,11 +43,20 @@ const calculateProjectProgress = async (projectId) => {
  */
 router.post('/', authenticate, authorize(['admin', 'manager']), async (req, res) => {
     try {
-        const { nombreProyecto, descripcion, fechaInicio, fechaFin, presupuesto, encargado, equipoTrabajo } = req.body;
+        const { nombreProyecto, descripcion, fechaInicio, fechaFin, presupuesto, encargado, equipoTrabajo, prioridad, divisa } = req.body;
 
         // Validar los datos recibidos
         if (!nombreProyecto || !fechaInicio || !presupuesto || !encargado) {
             return res.status(400).json({ message: 'Nombre del proyecto, fecha de inicio, presupuesto y encargado son obligatorios' });
+        }
+
+        // Validar prioridad y divisa
+        if (prioridad && !['Alta', 'Media', 'Baja'].includes(prioridad)) {
+            return res.status(400).json({ message: 'Prioridad inválida. Debe ser "Alta", "Media" o "Baja".' });
+        }
+
+        if (divisa && !['LPS', 'USD'].includes(divisa)) {
+            return res.status(400).json({ message: 'Divisa inválida. Debe ser "LPS" o "USD".' });
         }
 
         // Validar que el encargado sea un manager
@@ -65,7 +74,9 @@ router.post('/', authenticate, authorize(['admin', 'manager']), async (req, res)
             presupuesto,
             fechaInicio,
             fechaFin,
-            status: 'Pendiente', 
+            status: 'Pendiente',
+            prioridad: prioridad || 'Media', // Usar "Media" por defecto
+            divisa: divisa || 'LPS', // Usar "LPS" por defecto
             encargado,
             equipoTrabajo,
             createdBy,
@@ -93,7 +104,10 @@ router.get('/', authenticate, authorize(['admin', 'manager', 'user']), async (re
         if (status) filter.status = status;
         if (createdBy) filter.createdBy = createdBy;
 
-        const projects = await Project.find(filter).populate('createdBy', 'username email');
+        // Se agregan los campos prioridad y divisa a la selección de la consulta
+        const projects = await Project.find(filter, 'nombreProyecto descripcion fechaInicio fechaFin status prioridad divisa createdBy')
+            .populate('createdBy', 'username email');
+        
         res.status(200).json(projects);
     } catch (error) {
         console.error('Error al obtener proyectos:', error);
@@ -106,7 +120,7 @@ router.get('/', authenticate, authorize(['admin', 'manager', 'user']), async (re
  */
 router.put('/:id', authenticate, authorize(['admin', 'manager']), async (req, res) => {
     try {
-        const { nombreProyecto, descripcion, fechaInicio, fechaFin, status, presupuesto, equipoTrabajo } = req.body;
+        const { nombreProyecto, descripcion, fechaInicio, fechaFin, status, presupuesto, equipoTrabajo, prioridad, divisa } = req.body;
 
         if (!nombreProyecto || !fechaInicio || !presupuesto || !equipoTrabajo) {
             return res.status(400).json({ message: 'Nombre del proyecto, fecha de inicio, presupuesto y equipo de trabajo son obligatorios' });
@@ -122,22 +136,43 @@ router.put('/:id', authenticate, authorize(['admin', 'manager']), async (req, re
             return res.status(404).json({ message: 'Proyecto no encontrado' });
         }
 
+        // Validar prioridad y divisa solo si fueron enviadas
+        if (prioridad && !['Alta', 'Media', 'Baja'].includes(prioridad)) {
+            return res.status(400).json({ message: 'Prioridad inválida. Debe ser "Alta", "Media" o "Baja".' });
+        }
+
+        if (divisa && !['LPS', 'USD'].includes(divisa)) {
+            return res.status(400).json({ message: 'Divisa inválida. Debe ser "LPS" o "USD".' });
+        }
+
         // Detectar cambios en el proyecto
         let cambios = [];
         if (existingProject.nombreProyecto !== nombreProyecto) cambios.push(`Nombre cambiado de "${existingProject.nombreProyecto}" a "${nombreProyecto}"`);
         if (existingProject.descripcion !== descripcion) cambios.push(`Descripción actualizada`);
-        if (existingProject.fechaInicio.toISOString() !== new Date(fechaInicio).toISOString()) cambios.push(`Fecha de inicio actualizada`);
-        if (existingProject.fechaFin && fechaFin && existingProject.fechaFin.toISOString() !== new Date(fechaFin).toISOString()) cambios.push(`Fecha de fin actualizada`);
+        if (fechaInicio && existingProject.fechaInicio?.toISOString() !== new Date(fechaInicio).toISOString()) cambios.push(`Fecha de inicio actualizada`);
+        if (fechaFin && existingProject.fechaFin?.toISOString() !== new Date(fechaFin).toISOString()) cambios.push(`Fecha de fin actualizada`);
         if (existingProject.status !== status) cambios.push(`Estado cambiado de "${existingProject.status}" a "${status}"`);
         if (existingProject.presupuesto !== presupuesto) cambios.push(`Presupuesto cambiado de "${existingProject.presupuesto}" a "${presupuesto}"`);
         if (JSON.stringify(existingProject.equipoTrabajo) !== JSON.stringify(equipoTrabajo)) cambios.push(`Equipo de trabajo actualizado`);
+        if (prioridad && existingProject.prioridad !== prioridad) cambios.push(`Prioridad cambiada de "${existingProject.prioridad}" a "${prioridad}"`);
+        if (divisa && existingProject.divisa !== divisa) cambios.push(`Divisa cambiada de "${existingProject.divisa}" a "${divisa}"`);
+
+        // Construir objeto de actualización sin sobrescribir `prioridad` y `divisa` si no fueron enviadas
+        const updatedFields = {
+            nombreProyecto,
+            descripcion,
+            fechaInicio,
+            fechaFin,
+            status,
+            presupuesto,
+            equipoTrabajo,
+        };
+
+        if (prioridad) updatedFields.prioridad = prioridad;
+        if (divisa) updatedFields.divisa = divisa;
 
         // Actualizar el proyecto
-        const updatedProject = await Project.findByIdAndUpdate(
-            req.params.id,
-            { nombreProyecto, descripcion, fechaInicio, fechaFin, status, presupuesto, equipoTrabajo },
-            { new: true }
-        );
+        const updatedProject = await Project.findByIdAndUpdate(req.params.id, updatedFields, { new: true });
 
         if (!updatedProject) {
             return res.status(404).json({ message: 'Proyecto no encontrado' });
@@ -151,11 +186,11 @@ router.put('/:id', authenticate, authorize(['admin', 'manager']), async (req, re
             console.log('Intento de actualización sin cambios detectados');
             await registrarActividad(req.user.id, 'Actualización de proyecto', `Se intentó actualizar el proyecto "${nombreProyecto}" sin cambios.`);
         }
-        
+
         res.status(200).json({ message: 'Proyecto actualizado con éxito', project: updatedProject });
     } catch (error) {
         console.error('Error al actualizar el proyecto:', error);
-        res.status(400).json({ message: 'Error al actualizar el proyecto', error });
+        res.status(500).json({ message: 'Error al actualizar el proyecto', error });
     }
 });
 
@@ -237,7 +272,8 @@ router.get('/avance', authenticate, authorize(['admin', 'manager', 'user']), asy
 // Obtener el presupuesto de los proyectos
 router.get('/presupuesto', authenticate, authorize(['admin', 'manager']), async (req, res) => {
     try {
-        const projects = await Project.find({}, 'nombreProyecto presupuesto status');
+        // Se agrega el campo 'divisa' a la consulta
+        const projects = await Project.find({}, 'nombreProyecto presupuesto status divisa');
 
         const gastos = await Gasto.aggregate([
             { 
@@ -258,10 +294,11 @@ router.get('/presupuesto', authenticate, authorize(['admin', 'manager']), async 
                 presupuesto: project.presupuesto || 0,
                 utilizado: gasto.totalGasto || 0,
                 restante: (project.presupuesto || 0) - (gasto.totalGasto || 0),
-                status: project.status
+                status: project.status,
+                divisa: project.divisa // Se asegura que la divisa siempre esté presente en la respuesta
             };
         });
-        
+
         res.status(200).json(response);
     } catch (error) {
         console.error('Error al obtener el presupuesto de los proyectos:', error);
@@ -290,7 +327,12 @@ router.get('/fechas', authenticate, authorize(['admin', 'manager', 'user']), asy
 // Obtener un proyecto por ID (debe ir después)
 router.get('/:id', authenticate, authorize(['admin', 'manager', 'user']), async (req, res) => {
     try {
-        const project = await Project.findById(req.params.id).populate('createdBy', 'username email');
+        const project = await Project.findById(req.params.id)
+            .select('nombreProyecto descripcion presupuesto fechaInicio fechaFin status prioridad divisa encargado equipoTrabajo createdBy avance')
+            .populate('createdBy', 'username email') // Asegura que devuelve los datos del creador
+            .populate('encargado', 'username email') // Asegura que devuelve los datos del encargado
+            .populate('equipoTrabajo', 'username email'); // Asegura que devuelve los datos del equipo de trabajo
+
         if (!project) {
             return res.status(404).json({ message: 'Proyecto no encontrado' });
         }

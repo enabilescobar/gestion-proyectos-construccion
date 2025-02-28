@@ -40,8 +40,11 @@ const Login = () => {
     return (
         <div className="d-flex justify-content-center align-items-center vh-100" style={{ backgroundColor: '#4169E1' }}>
             <div className="card p-4 shadow-sm" style={{ maxWidth: '400px', width: '100%' }}>
-                <h1 className="text-center mb-4" style={{ fontSize: '2rem', color: '#007bff' }}>
-                    CONSTRUCCIONES "GUARDADO"
+            <h1 className="text-center mb-4" style={{ fontSize: '2rem', color: '#007bff' }}>
+                    Administracion de Proyectos
+                </h1>
+                <h1 className="text-center mb-4" style={{ fontSize: '3rem', color: '#007bff' }}>
+                    "InOrder"
                 </h1>
                 <h2 className="mb-4 text-center">Iniciar Sesión</h2>
                 

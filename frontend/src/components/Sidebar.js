@@ -20,8 +20,7 @@ const Sidebar = () => {
 
     return (
         <div className="sidebar bg-dark text-white p-3" style={{ height: '100vh' }}>
-            <h3>Construcciones</h3>
-            <h3>GUARDADO</h3>
+            <h3>InOrder</h3>
             <ul className="nav flex-column">
                 <li className="nav-item">
                     <Link to="/home" className="nav-link text-white">Inicio</Link>
@@ -40,7 +39,7 @@ const Sidebar = () => {
                 {/* Mostrar el enlace de Reportes solo si el rol es 'admin' o 'manager' */}
                 {(userRole === 'admin' || userRole === 'manager') && (
                     <li className="nav-item">
-                        <Link to="/en-construccion" className="nav-link text-white">Reportes</Link>
+                        <Link to="/Reportes" className="nav-link text-white">Reportes</Link>
                     </li>
                 )}
             </ul>

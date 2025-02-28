@@ -23,6 +23,8 @@ import 'bootstrap/dist/css/bootstrap.min.css'; // Esto es necesario para que las
 import "dhtmlx-gantt/codebase/dhtmlxgantt.css";
 import './App.css';
 import Sidebar from './components/Sidebar';
+import Reportes from './components/reportesIndex';
+import ReporteCostos from './components/ReporteCostos';
 
 function App() {
     return (
@@ -73,6 +75,12 @@ function App() {
 
                     {/* Ruta para Cambiar Password página de admin */}
                     <Route path="/CambiarPasswordAdmin/:userId" element={<Layout><CambiarPasswordAdmin /></Layout>} /> 
+
+                    {/* Ruta para Pagina de Indice de Reportes */}
+                    <Route path="/Reportes" element={<Layout><Reportes /></Layout>} />
+
+                    {/* Ruta para Pagina de Reporte de Costos */}
+                    <Route path="/ReporteCostos" element={<Layout><ReporteCostos /></Layout>} />
 
                     {/* Ruta para Pagina en construccion */}
                     <Route path="/en-construccion" element={<UnderConstruction />} />

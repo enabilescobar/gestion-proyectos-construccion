@@ -16,6 +16,8 @@ const EditarProyecto = () => {
         presupuesto: '',
         encargado: '',
         equipoTrabajo: [],
+        prioridad: 'Media', // Nuevo campo con valor por defecto
+        divisa: 'LPS' // Nuevo campo con valor por defecto
     });
     const [tareas, setTareas] = useState([]);
     const [gastos, setGastos] = useState([]);
@@ -47,9 +49,10 @@ const EditarProyecto = () => {
                 ...proyectoData,
                 fechaInicio: proyectoData.fechaInicio ? proyectoData.fechaInicio.split('T')[0] : '',
                 fechaFin: proyectoData.fechaFin ? proyectoData.fechaFin.split('T')[0] : '',
-                status: proyectoData.status || 'Pendiente',
+                encargado: proyectoData.encargado,  // ✅ Guardamos el objeto completo
+                equipoTrabajo: proyectoData.equipoTrabajo,  // ✅ Guardamos el array de objetos completos
             });
-
+            
             const tareasResponse = await axios.get(`http://localhost:5000/api/tasks/proyecto/${id}`, {
                 headers: { Authorization: `Bearer ${token}` },
             });
@@ -93,8 +96,10 @@ const EditarProyecto = () => {
                 status: proyecto.status,
                 encargado: proyecto.encargado,
                 equipoTrabajo: proyecto.equipoTrabajo,
+                prioridad: proyecto.prioridad, // Se agrega prioridad
+                divisa: proyecto.divisa // Se agrega divisa
             };
-
+            
             await axios.put(`http://localhost:5000/api/projects/${id}`, updatedProject, {
                 headers: { Authorization: `Bearer ${token}` },
             });
@@ -219,6 +224,33 @@ const EditarProyecto = () => {
                             required
                         />
                     </div>
+
+                    <div className="mb-3">
+                        <label>Prioridad</label>
+                        <select
+                            className="form-control"
+                            value={proyecto.prioridad}
+                            onChange={(e) => setProyecto({ ...proyecto, prioridad: e.target.value })}
+                            required
+                        >
+                            <option value="Alta">Alta</option>
+                            <option value="Media">Media</option>
+                            <option value="Baja">Baja</option>
+                        </select>
+                    </div>
+
+                    <div className="mb-3">
+                        <label>Divisa</label>
+                        <select
+                            className="form-control"
+                            value={proyecto.divisa}
+                            onChange={(e) => setProyecto({ ...proyecto, divisa: e.target.value })}
+                            required
+                        >
+                            <option value="LPS">Lempiras (LPS)</option>
+                            <option value="USD">Dólares (USD)</option>
+                        </select>
+                    </div>
                     <div className="mb-3">
                         <label>Estado del Proyecto</label>
                         <select
@@ -235,8 +267,11 @@ const EditarProyecto = () => {
                         <label>Seleccionar Encargado (Manager)</label>
                         <select
                             className="form-control"
-                            value={proyecto.encargado}
-                            onChange={(e) => setProyecto({ ...proyecto, encargado: e.target.value })}
+                            value={proyecto.encargado?._id || ''}  
+                            onChange={(e) => {
+                                const selectedManager = managers.find(m => m._id === e.target.value);
+                                setProyecto({ ...proyecto, encargado: selectedManager });
+                            }}
                             required
                         >
                             <option value="">Selecciona un Encargado</option>
@@ -256,7 +291,7 @@ const EditarProyecto = () => {
                                 if (selectedUser) {
                                     setProyecto({
                                         ...proyecto,
-                                        equipoTrabajo: [...proyecto.equipoTrabajo, selectedUser._id],
+                                        equipoTrabajo: [...proyecto.equipoTrabajo, selectedUser], // ✅ Guardamos el objeto
                                     });
                                 }
                             }}
@@ -269,26 +304,21 @@ const EditarProyecto = () => {
                             ))}
                         </select>
                         <ul className="list-group">
-                            {proyecto.equipoTrabajo.map(userId => {
-                                const user = usuarios.find(u => u._id === userId);
-                                return (
-                                    <li key={userId} className="list-group-item d-flex justify-content-between">
-                                        {user.username}
-                                        <button
-                                            type="button"
-                                            className="btn btn-danger btn-sm"
-                                            onClick={() =>
-                                                setProyecto({
-                                                    ...proyecto,
-                                                    equipoTrabajo: proyecto.equipoTrabajo.filter(id => id !== userId),
-                                                })
-                                            }
-                                        >
-                                            Quitar
-                                        </button>
-                                    </li>
-                                );
-                            })}
+                            {proyecto.equipoTrabajo.map(user => (
+                                <li key={user._id} className="list-group-item d-flex justify-content-between">
+                                    {user.username} 
+                                    <button
+                                        type="button"
+                                        className="btn btn-danger btn-sm"
+                                        onClick={() => setProyecto({
+                                            ...proyecto,
+                                            equipoTrabajo: proyecto.equipoTrabajo.filter(u => u._id !== user._id),
+                                        })}
+                                    >
+                                        Quitar
+                                    </button>
+                                </li>
+                            ))}
                         </ul>
                     </div>
                     <button className="btn btn-secondary mb-3"type="submit">
@@ -370,7 +400,7 @@ const EditarProyecto = () => {
                                 <td>{gasto.description}</td>
                                 <td>{gasto.amount}</td>
                                 <td>{gasto.doneBy}</td>
-                                <td>{new Date(gasto.date).toLocaleDateString()}</td>
+                                <td>{gasto.date ? new Date(gasto.date).toISOString().split('T')[0] : ''}</td>
                                 <td>
                                     {gasto.facturas?.length > 0 ? (
                                         <button
