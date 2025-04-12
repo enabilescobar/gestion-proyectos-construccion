@@ -6,7 +6,7 @@ const reportTypes = [
   { id: "ReporteCostos", title: "Reporte de Costos", description: "Detalle de los costos acumulados, presupuestados y desviaciones.", icon: <FileText size={40} /> },
   { id: "en-construccion", title: "Reporte de Cumplimiento de Fechas", description: "Analiza si el proyecto está siguiendo el cronograma establecido.", icon: <Calendar size={40} /> },
   { id: "en-construccion", title: "Reporte General del Proyecto", description: "Resumen completo del proyecto incluyendo costos, avance y cumplimiento de plazos.", icon: <ClipboardList size={40} /> },
-  { id: "en-construccion", title: "Diagrama de Gantt", description: "Exporta un cronograma de tareas y plazos en formato Excel.", icon: <Table size={40} /> },
+  { id: "DiagramaGantt", title: "Diagrama de Gantt", description: "Exporta un cronograma de tareas y plazos en formato Excel.", icon: <Table size={40} /> },
 ];
 
 function Reportes() {
@@ -15,7 +15,7 @@ function Reportes() {
   return (
     <div className="container mt-4">
       <h1 className="mb-3">Generación de Reportes de Proyecto</h1>
-      <p className="text-muted">Seleccione el tipo de reporte que desea generar. Puede exportarlos en PDF o Excel.</p>
+      <p className="text-muted">Seleccione el tipo de reporte que desea generar.</p>
       
       {/* Cards de reportes */}
       <div className="row">
@@ -26,7 +26,9 @@ function Reportes() {
                 <div className="mb-3">{report.icon}</div>
                 <h5 className="card-title">{report.title}</h5>
                 <p className="card-text text-muted">{report.description}</p>
-                <button className="btn btn-primary mt-2">Generar Reporte</button>
+                <button className="btn btn-primary mt-2">
+                  {report.id === "DiagramaGantt" ? "Ver Diagrama" : "Generar Reporte"}
+                </button>
               </div>
             </div>
           </div>

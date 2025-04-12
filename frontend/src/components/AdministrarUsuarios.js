@@ -1,7 +1,15 @@
 // frontend/src/components/AdministrarUsuarios.js
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Table, Button, Modal } from 'react-bootstrap';
+import {
+    Table,
+    Button,
+    Modal,
+    Form,
+    Row,
+    Col,
+    Container,
+} from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
@@ -13,9 +21,10 @@ const AdministrarUsuarios = () => {
     const [selectedUser, setSelectedUser] = useState(null);
     const [showMessageModal, setShowMessageModal] = useState(false);
     const [message, setMessage] = useState('');
+    const [filtroRol, setFiltroRol] = useState('');
+    const [filtroEstado, setFiltroEstado] = useState('');
     const navigate = useNavigate();
 
-    // Función para obtener usuarios
     const fetchUsuarios = async () => {
         try {
             const token = localStorage.getItem('authToken');
@@ -29,7 +38,6 @@ const AdministrarUsuarios = () => {
         }
     };
 
-    // Función para obtener el rol del usuario autenticado
     const fetchUserRole = async () => {
         const token = localStorage.getItem('authToken');
         if (token) {
@@ -49,7 +57,6 @@ const AdministrarUsuarios = () => {
         }
     };
 
-    // Llamadas iniciales
     useEffect(() => {
         fetchUsuarios();
         fetchUserRole();
@@ -68,7 +75,7 @@ const AdministrarUsuarios = () => {
             });
             setMessage(`Usuario "${selectedUser.nombre} ${selectedUser.apellido}" eliminado con éxito.`);
             setShowDeleteModal(false);
-            setShowMessageModal(true); // Mostrar modal de confirmación
+            setShowMessageModal(true);
         } catch (error) {
             console.error('Error al eliminar el usuario:', error);
             setMessage('Error al eliminar el usuario.');
@@ -78,39 +85,66 @@ const AdministrarUsuarios = () => {
 
     const closeMessageModal = () => {
         setShowMessageModal(false);
-        fetchUsuarios(); // Actualizar la lista de usuarios
+        fetchUsuarios();
     };
 
     const handleChangePassword = (userId) => {
         navigate(`/CambiarPasswordAdmin/${userId}`);
     };
 
+    const handleRowClick = (userId) => {
+        // Este método queda listo para usar cuando se implemente la edición
+        // Por ahora, no hace nada
+        console.log('Fila clickeada:', userId);
+    };
+
+    const usuariosFiltrados = usuarios.filter(
+        (u) =>
+            (filtroRol === '' || u.role === filtroRol) &&
+            (filtroEstado === '' || (filtroEstado === 'Activo' ? u.isActive : !u.isActive))
+    );
+
     return (
-        <div>
-            <div className="container mt-5">
-                <h2 className="mb-4">Administrar Usuarios</h2>
+        <Container className="mt-5">
+            <h2 className="mb-4">Administrar Usuarios</h2>
 
-                {/* Botones */}
-                {(userRole === 'admin' || userRole === 'manager') && (
-                    <Button
-                        variant="success"
-                        className="mb-3"
-                        onClick={() => navigate('/CrearUsuario')}
-                    >
-                        Crear Usuario
+            <Row className="mb-3">
+                <Col md={4}>
+                    <Form.Group controlId="filtroRol">
+                        <Form.Label>Filtrar por Rol</Form.Label>
+                        <Form.Select value={filtroRol} onChange={(e) => setFiltroRol(e.target.value)}>
+                            <option value="">Todos</option>
+                            <option value="admin">Admin</option>
+                            <option value="manager">Manager</option>
+                            <option value="user">Usuario</option>
+                        </Form.Select>
+                    </Form.Group>
+                </Col>
+                <Col md={4}>
+                    <Form.Group controlId="filtroEstado">
+                        <Form.Label>Filtrar por Estado</Form.Label>
+                        <Form.Select value={filtroEstado} onChange={(e) => setFiltroEstado(e.target.value)}>
+                            <option value="">Todos</option>
+                            <option value="Activo">Activo</option>
+                            <option value="Inactivo">Inactivo</option>
+                        </Form.Select>
+                    </Form.Group>
+                </Col>
+                <Col md={4} className="d-flex align-items-end justify-content-end">
+                    {(userRole === 'admin' || userRole === 'manager') && (
+                        <Button variant="success" onClick={() => navigate('/CrearUsuario')} className="me-2">
+                            Crear Usuario
+                        </Button>
+                    )}
+                    <Button variant="outline-dark" onClick={() => navigate('/home')}>
+                        Regresar
                     </Button>
-                )}
-                <Button
-                    variant="outline-dark"
-                    className="mb-3 ms-3"
-                    onClick={() => navigate('/home')}
-                >
-                    Regresar
-                </Button>
+                </Col>
+            </Row>
 
-                {/* Tabla */}
-                <Table striped bordered hover className="table table-bordered">
-                    <thead>
+            <div className="table-responsive">
+                <Table striped bordered hover className="align-middle text-center table-striped shadow-sm">
+                    <thead className="table-dark">
                         <tr>
                             <th>Nombre</th>
                             <th>Apellido</th>
@@ -122,69 +156,79 @@ const AdministrarUsuarios = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {usuarios.map((user) => (
-                            <tr key={user._id}>
-                                <td>{user.nombre || 'N/A'}</td>
-                                <td>{user.apellido || 'N/A'}</td>
-                                <td>{user.email}</td>
-                                <td>{user.telefono || 'N/A'}</td>
-                                <td>{user.role}</td>
-                                <td>{user.isActive ? 'Activo' : 'Inactivo'}</td>
-                                <td>
-                                    <Button
-                                        variant="danger"
-                                        size="sm"
-                                        onClick={() => handleDeleteUser(user)}
-                                        disabled={userRole === 'user'}
-                                    >
-                                        Eliminar
-                                    </Button>{' '}
-                                    <Button
-                                        variant="secondary"
-                                        size="sm"
-                                        onClick={() => handleChangePassword(user._id)}
-                                        disabled={userRole === 'user'}
-                                    >
-                                        Cambiar Contraseña
-                                    </Button>
-                                </td>
+                        {usuariosFiltrados.length > 0 ? (
+                            usuariosFiltrados.map((user) => (
+                                <tr
+                                    key={user._id}
+                                    style={{ cursor: 'pointer' }}
+                                    onClick={() => handleRowClick(user._id)}
+                                >
+                                    <td>{user.nombre || 'N/A'}</td>
+                                    <td>{user.apellido || 'N/A'}</td>
+                                    <td>{user.email}</td>
+                                    <td>{user.telefono || 'N/A'}</td>
+                                    <td>{user.role}</td>
+                                    <td>{user.isActive ? 'Activo' : 'Inactivo'}</td>
+                                    <td onClick={(e) => e.stopPropagation()}>
+                                        <Button
+                                            variant="danger"
+                                            size="sm"
+                                            onClick={() => handleDeleteUser(user)}
+                                            disabled={userRole === 'user'}
+                                        >
+                                            Eliminar
+                                        </Button>{' '}
+                                        <Button
+                                            variant="secondary"
+                                            size="sm"
+                                            onClick={() => handleChangePassword(user._id)}
+                                            disabled={userRole === 'user'}
+                                        >
+                                            Cambiar Contraseña
+                                        </Button>
+                                    </td>
+                                </tr>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan="7" className="text-center">No hay usuarios para mostrar.</td>
                             </tr>
-                        ))}
+                        )}
                     </tbody>
                 </Table>
-
-                {/* Modal de Confirmación para Eliminar */}
-                <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
-                    <Modal.Header closeButton>
-                        <Modal.Title>Confirmar Eliminación</Modal.Title>
-                    </Modal.Header>
-                    <Modal.Body>
-                        ¿Está seguro que desea eliminar al usuario "{selectedUser?.nombre} {selectedUser?.apellido}"?
-                    </Modal.Body>
-                    <Modal.Footer>
-                        <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-                            Cancelar
-                        </Button>
-                        <Button variant="danger" onClick={confirmDeleteUser}>
-                            Eliminar
-                        </Button>
-                    </Modal.Footer>
-                </Modal>
-
-                {/* Modal de Mensaje de Confirmación */}
-                <Modal show={showMessageModal} onHide={closeMessageModal}>
-                    <Modal.Header closeButton>
-                        <Modal.Title>Acción Completada</Modal.Title>
-                    </Modal.Header>
-                    <Modal.Body>{message}</Modal.Body>
-                    <Modal.Footer>
-                        <Button variant="primary" onClick={closeMessageModal}>
-                            Cerrar
-                        </Button>
-                    </Modal.Footer>
-                </Modal>
             </div>
-        </div>
+
+            {/* Modal de Confirmación para Eliminar */}
+            <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Confirmar Eliminación</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>
+                    ¿Está seguro que desea eliminar al usuario "{selectedUser?.nombre} {selectedUser?.apellido}"?
+                </Modal.Body>
+                <Modal.Footer>
+                    <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+                        Cancelar
+                    </Button>
+                    <Button variant="danger" onClick={confirmDeleteUser}>
+                        Eliminar
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+
+            {/* Modal de Mensaje */}
+            <Modal show={showMessageModal} onHide={closeMessageModal}>
+                <Modal.Header closeButton>
+                    <Modal.Title>Acción Completada</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>{message}</Modal.Body>
+                <Modal.Footer>
+                    <Button variant="primary" onClick={closeMessageModal}>
+                        Cerrar
+                    </Button>
+                </Modal.Footer>
+            </Modal>
+        </Container>
     );
 };
 

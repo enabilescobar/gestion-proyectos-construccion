@@ -29,8 +29,8 @@ const Sidebar = () => {
                     <Link to="/proyectos-admin" className="nav-link text-white">Proyectos</Link>
                 </li>
 
-                {/* Mostrar el enlace de Usuarios solo si el rol es 'admin' o 'manager' */}
-                {(userRole === 'admin' || userRole === 'manager') && (
+                {/* Mostrar el enlace de Usuarios solo si el rol es 'admin' */}
+                {(userRole === 'admin') && (
                     <li className="nav-item">
                         <Link to="/AdministrarUsuarios" className="nav-link text-white">Usuarios</Link>
                     </li>

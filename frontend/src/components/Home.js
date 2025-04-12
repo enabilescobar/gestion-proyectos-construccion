@@ -18,9 +18,11 @@ import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 
 // Registrar los componentes necesarios de Chart.js
 ChartJS.register(
+    ChartDataLabels,
     CategoryScale,
     LinearScale,
     BarElement,
@@ -172,7 +174,35 @@ const Home = () => {
                                 options={{
                                     indexAxis: 'y',
                                     onClick: handleAvanceClick,
-                                    scales: { x: { max: 100, beginAtZero: true } }
+                                    scales: {
+                                        x: {
+                                            max: 100,
+                                            beginAtZero: true,
+                                            title: {
+                                                display: true,
+                                                text: 'Porcentaje (%)'
+                                            }
+                                        }
+                                    },
+                                    plugins: {
+                                        datalabels: {
+                                            anchor: context => context.dataset.data[context.dataIndex] >= 98 ? 'end' : 'end',
+                                            align: context => context.dataset.data[context.dataIndex] >= 98 ? 'start' : 'end',
+                                            formatter: (value) => `${value}%`,
+                                            color: context => context.dataset.data[context.dataIndex] >= 98 ? 'white' : '#000',
+                                            font: {
+                                                weight: 'bold'
+                                            },
+                                            clamp: true,
+                                            clip: false
+                                        },
+                                        legend: {
+                                            display: false
+                                        },
+                                        tooltip: {
+                                            enabled: true
+                                        }
+                                    }
                                 }}
                             />
                         </Card>
@@ -211,9 +241,26 @@ const Home = () => {
                                         }],
                                     }}
                                     options={{
+                                        plugins: {
+                                            legend: { display: false }, // Ocultamos leyenda para usar texto externo
+                                        },
                                         onClick: () => navigate(`/proyectos/${proyecto._id}`)
                                     }}
                                 />
+
+                                {/* NUEVO: Texto debajo de la gráfica */}
+                                <div className="mt-3 text-center">
+                                    <p className="mb-1"><strong>Presupuesto:</strong> Lps {(Math.max(0, (proyecto.presupuesto || 0))).toLocaleString('es-HN', { minimumFractionDigits: 2 })}</p>
+                                    <p className="mb-1"><strong>Utilizado:</strong> Lps {proyecto.utilizado.toLocaleString('es-HN', { minimumFractionDigits: 2 })}</p>
+                                    <p className="mb-1"><strong>Restante:</strong> Lps {(Math.max(0, (proyecto.presupuesto || 0) - (proyecto.utilizado || 0))).toLocaleString('es-HN', { minimumFractionDigits: 2 })}</p>
+                                    <p className="mb-0 text-muted">
+                                        <strong>Porcentaje usado:</strong> {
+                                            proyecto.presupuesto > 0
+                                                ? `${Math.round((proyecto.utilizado / proyecto.presupuesto) * 100)}%`
+                                                : '0%'
+                                        }
+                                    </p>
+                                </div>
                             </Card>
                         </Col>
                     ))}

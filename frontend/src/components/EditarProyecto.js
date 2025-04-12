@@ -261,6 +261,8 @@ const EditarProyecto = () => {
                             <option value="Pendiente">Pendiente</option>
                             <option value="En Proceso">En Proceso</option>
                             <option value="Completado">Completado</option>
+                            <option value="Suspendido">Suspendido</option>
+                            <option value="Cancelado">Cancelado</option>
                         </select>
                     </div>
                     <div className="mb-3">
@@ -306,7 +308,7 @@ const EditarProyecto = () => {
                         <ul className="list-group">
                             {proyecto.equipoTrabajo.map(user => (
                                 <li key={user._id} className="list-group-item d-flex justify-content-between">
-                                    {user.username} 
+                                    {user.username}     
                                     <button
                                         type="button"
                                         className="btn btn-danger btn-sm"

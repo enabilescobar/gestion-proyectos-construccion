@@ -25,6 +25,8 @@ import './App.css';
 import Sidebar from './components/Sidebar';
 import Reportes from './components/reportesIndex';
 import ReporteCostos from './components/ReporteCostos';
+import DiagramaGantt from './components/DiagramaGantt';
+
 
 function App() {
     return (
@@ -81,6 +83,9 @@ function App() {
 
                     {/* Ruta para Pagina de Reporte de Costos */}
                     <Route path="/ReporteCostos" element={<Layout><ReporteCostos /></Layout>} />
+
+                    {/* Ruta para Pagina del Grafico de Gantt */}
+                    <Route path="/DiagramaGantt" element={<Layout><DiagramaGantt /></Layout>} />
 
                     {/* Ruta para Pagina en construccion */}
                     <Route path="/en-construccion" element={<UnderConstruction />} />

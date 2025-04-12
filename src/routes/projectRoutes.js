@@ -105,9 +105,9 @@ router.get('/', authenticate, authorize(['admin', 'manager', 'user']), async (re
         if (createdBy) filter.createdBy = createdBy;
 
         // Se agregan los campos prioridad y divisa a la selección de la consulta
-        const projects = await Project.find(filter, 'nombreProyecto descripcion fechaInicio fechaFin status prioridad divisa createdBy')
-            .populate('createdBy', 'username email');
-        
+        const projects = await Project.find(filter, 'nombreProyecto descripcion fechaInicio fechaFin status prioridad divisa createdBy encargado avance')
+            .populate('createdBy', 'username email')
+            .populate('encargado','nombre');
         res.status(200).json(projects);
     } catch (error) {
         console.error('Error al obtener proyectos:', error);
