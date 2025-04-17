@@ -24,7 +24,9 @@ const AdministrarUsuarios = () => {
     const [filtroRol, setFiltroRol] = useState('');
     const [filtroEstado, setFiltroEstado] = useState('');
     const navigate = useNavigate();
-
+    const [paginaActual, setPaginaActual] = useState(1);
+    const [usuariosPorPagina, setUsuariosPorPagina] = useState(10);
+    
     const fetchUsuarios = async () => {
         try {
             const token = localStorage.getItem('authToken');
@@ -104,6 +106,17 @@ const AdministrarUsuarios = () => {
             (filtroEstado === '' || (filtroEstado === 'Activo' ? u.isActive : !u.isActive))
     );
 
+    const indiceUltimo = paginaActual * usuariosPorPagina;
+    const indicePrimero = indiceUltimo - usuariosPorPagina;
+    const usuariosPaginados = usuariosFiltrados.slice(indicePrimero, indiceUltimo);
+    const totalPaginas = Math.ceil(usuariosFiltrados.length / usuariosPorPagina);
+    
+    const cambiarPagina = (pagina) => {
+        if (pagina > 0 && pagina <= totalPaginas) {
+            setPaginaActual(pagina);
+        }
+    };
+    
     return (
         <Container className="mt-5">
             <h2 className="mb-4">Administrar Usuarios</h2>
@@ -143,6 +156,23 @@ const AdministrarUsuarios = () => {
             </Row>
 
             <div className="table-responsive">
+            <Row className="mb-3">
+                <Col md="auto">
+                    <Form.Label>Mostrar:</Form.Label>
+                    <Form.Select
+                        value={usuariosPorPagina}
+                        onChange={(e) => {
+                            setUsuariosPorPagina(Number(e.target.value));
+                            setPaginaActual(1);
+                        }}
+                    >
+                        <option value={10}>10</option>
+                        <option value={25}>25</option>
+                        <option value={100}>100</option>
+                    </Form.Select>
+                </Col>
+            </Row>
+
                 <Table striped bordered hover className="align-middle text-center table-striped shadow-sm">
                     <thead className="table-dark">
                         <tr>
@@ -157,7 +187,7 @@ const AdministrarUsuarios = () => {
                     </thead>
                     <tbody>
                         {usuariosFiltrados.length > 0 ? (
-                            usuariosFiltrados.map((user) => (
+                            usuariosPaginados.map((user) => (
                                 <tr
                                     key={user._id}
                                     style={{ cursor: 'pointer' }}
@@ -196,6 +226,25 @@ const AdministrarUsuarios = () => {
                         )}
                     </tbody>
                 </Table>
+                {totalPaginas > 1 && (
+                <div className="d-flex justify-content-center my-3">
+                    <nav>
+                        <ul className="pagination">
+                            <li className={`page-item ${paginaActual === 1 && 'disabled'}`}>
+                                <button className="page-link" onClick={() => cambiarPagina(paginaActual - 1)}>Anterior</button>
+                            </li>
+                            {Array.from({ length: totalPaginas }, (_, i) => (
+                                <li key={i} className={`page-item ${paginaActual === i + 1 ? 'active' : ''}`}>
+                                    <button className="page-link" onClick={() => cambiarPagina(i + 1)}>{i + 1}</button>
+                                </li>
+                            ))}
+                            <li className={`page-item ${paginaActual === totalPaginas && 'disabled'}`}>
+                                <button className="page-link" onClick={() => cambiarPagina(paginaActual + 1)}>Siguiente</button>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            )}
             </div>
 
             {/* Modal de Confirmación para Eliminar */}

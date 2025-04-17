@@ -14,7 +14,9 @@ const ProyectosAdmin = () => {
     const [filtroEstado, setFiltroEstado] = useState('');
     const [filtroPrioridad, setFiltroPrioridad] = useState('');
     const navigate = useNavigate();
-
+    const [paginaActual, setPaginaActual] = useState(1);
+    const [proyectosPorPagina, setProyectosPorPagina] = useState(10);
+    
     const fetchProyectos = async () => {
         setLoading(true);
         try {
@@ -70,6 +72,17 @@ const ProyectosAdmin = () => {
         (filtroPrioridad === '' || p.prioridad === filtroPrioridad)
     );
 
+    const indiceUltimo = paginaActual * proyectosPorPagina;
+    const indicePrimero = indiceUltimo - proyectosPorPagina;
+    const proyectosPaginados = proyectosFiltrados.slice(indicePrimero, indiceUltimo);
+    const totalPaginas = Math.ceil(proyectosFiltrados.length / proyectosPorPagina);
+    
+    const cambiarPagina = (pagina) => {
+        if (pagina > 0 && pagina <= totalPaginas) {
+            setPaginaActual(pagina);
+        }
+    };
+    
     return (
         <div style={{ backgroundColor: '#f8f9fa', minHeight: '100vh', padding: '20px' }}>
             <Container fluid>
@@ -118,6 +131,22 @@ const ProyectosAdmin = () => {
                     </div>
                 ) : (
                     <div className="table-responsive">
+                        <Row className="mb-3">
+                            <Col md="auto">
+                                <Form.Label>Mostrar:</Form.Label>
+                                <Form.Select
+                                    value={proyectosPorPagina}
+                                    onChange={(e) => {
+                                        setProyectosPorPagina(Number(e.target.value));
+                                        setPaginaActual(1); // Reiniciar a la página 1
+                                    }}
+                                >
+                                    <option value={10}>10</option>
+                                    <option value={25}>25</option>
+                                    <option value={100}>100</option>
+                                </Form.Select>
+                            </Col>
+                        </Row>
                         <Table hover bordered className="align-middle text-center table-striped shadow-sm">
                             <thead className="table-dark">
                                 <tr>
@@ -132,7 +161,7 @@ const ProyectosAdmin = () => {
                             </thead>
                             <tbody>
                                 {proyectosFiltrados.length > 0 ? (
-                                    proyectosFiltrados.map((proyecto) => (
+                                    proyectosPaginados.map((proyecto) => (
                                         <tr
                                             key={proyecto._id}
                                             onClick={() => handleRowClick(proyecto._id)}
@@ -154,9 +183,27 @@ const ProyectosAdmin = () => {
                                 )}
                             </tbody>
                         </Table>
+                        {totalPaginas > 1 && (
+                        <div className="d-flex justify-content-center my-3">
+                            <nav>
+                                <ul className="pagination">
+                                    <li className={`page-item ${paginaActual === 1 && 'disabled'}`}>
+                                        <button className="page-link" onClick={() => cambiarPagina(paginaActual - 1)}>Anterior</button>
+                                    </li>
+                                    {Array.from({ length: totalPaginas }, (_, i) => (
+                                        <li key={i} className={`page-item ${paginaActual === i + 1 ? 'active' : ''}`}>
+                                            <button className="page-link" onClick={() => cambiarPagina(i + 1)}>{i + 1}</button>
+                                        </li>
+                                    ))}
+                                    <li className={`page-item ${paginaActual === totalPaginas && 'disabled'}`}>
+                                        <button className="page-link" onClick={() => cambiarPagina(paginaActual + 1)}>Siguiente</button>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
+                    )}
                     </div>
                 )}
-
                 <div className="d-flex justify-content-between mt-4">
                     {userRole !== 'user' && (
                         <button className="btn btn-secondary" onClick={() => navigate('/proyectos')}>
