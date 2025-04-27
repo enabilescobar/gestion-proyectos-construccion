@@ -31,6 +31,7 @@ const userRoutes = require('./routes/userRoutes');
 const projectRoutes = require('./routes/projectRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 const gastoRoutes = require('./routes/gastoRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
 // Conexión a MongoDB Atlas
 mongoose.connect(process.env.MONGODB_URI, {
@@ -46,6 +47,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/gastos', gastoRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Ruta principal
 app.get('/', (req, res) => {

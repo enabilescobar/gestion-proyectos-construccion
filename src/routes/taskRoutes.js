@@ -322,4 +322,17 @@ const hasCircularDependency = async (taskId, dependencias) => {
     return false;
 };
 
+router.get('/:id/project', authenticate, async (req, res) => {
+    try {
+      const task = await Task.findById(req.params.id).populate('project', '_id');
+      if (!task || !task.project) {
+        return res.status(404).json({ message: 'Proyecto no encontrado para esta tarea.' });
+      }
+      res.status(200).json({ projectId: task.project._id });
+    } catch (error) {
+      console.error('Error al obtener proyecto de la tarea:', error);
+      res.status(500).json({ message: 'Error en el servidor.' });
+    }
+  });
+  
 module.exports = router;
