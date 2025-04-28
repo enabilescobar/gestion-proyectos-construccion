@@ -1,11 +1,13 @@
-// frontend/src/components/VerProyectos.js
+// frontend/src/components/VerProyectos.jspaginaActua
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Modal, Button } from 'react-bootstrap';
+import { Modal, Button, Card, Table } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const VerProyectos = () => {
+    const [paginaActual, setPaginaActual] = useState(1);
+    const [proyectosPorPagina, setProyectosPorPagina] = useState(10);
     const [projects, setProjects] = useState([]);
     const [selectedProject, setSelectedProject] = useState(null);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -51,55 +53,143 @@ const VerProyectos = () => {
     return (
         <div>
             <div className="container mt-5">
-                <h2 className="text-center mb-4">Administracion de Proyectos</h2>
-                {message && <div className="alert alert-info">{message}</div>}
+                <Card className="shadow-sm p-4 mb-4">
+                    <h2 className="text-center mb-4">Administración de Proyectos</h2>
 
-                <table className="table table-bordered">
-                    <thead>
-                        <tr>
+                    {message && (
+                        <div className="alert alert-success text-center fw-bold">
+                        {message}
+                        </div>
+                    )}
+                </Card>
+
+                <Card className="shadow-sm p-4 mb-4">
+                    <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+                        <h4 className="mb-0">Proyectos Registrados</h4>
+
+                        <div className="d-flex gap-3">
+                        <Button
+                            variant="primary"
+                            size="md"
+                            onClick={() => navigate('/proyectos/agregar')}
+                        >
+                            Agregar Proyecto
+                        </Button>
+
+                        <Button
+                            variant="outline-dark"
+                            size="md"
+                            onClick={() => navigate('/proyectos-admin')}
+                        >
+                            Regresar
+                        </Button>
+                        </div>
+                    </div>
+
+                    <div className="d-flex justify-content-end mb-3">
+                        <div>
+                            <label className="me-2">Mostrar:</label>
+                            <select
+                            value={proyectosPorPagina}
+                            onChange={(e) => {
+                                setProyectosPorPagina(Number(e.target.value));
+                                setPaginaActual(1);
+                            }}
+                            className="form-select d-inline-block w-auto"
+                            >
+                            <option value={10}>10</option>
+                            <option value={25}>25</option>
+                            <option value={50}>50</option>
+                            <option value={100}>100</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div className="table-responsive">
+                        <Table hover borderless responsive className="align-middle text-center">
+                        <thead className="table-dark">
+                            <tr>
                             <th>Nombre</th>
                             <th>Descripción</th>
                             <th>Estado</th>
                             <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {projects.map((project) => (
-                            <tr key={project._id}>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {projects.length > 0 ? (
+                            projects
+                            .slice((paginaActual - 1) * proyectosPorPagina, paginaActual * proyectosPorPagina)
+                            .map((project) => (
+                              <tr key={project._id}>
                                 <td>{project.nombreProyecto}</td>
                                 <td>{project.descripcion}</td>
-                                <td>{project.status}</td>
                                 <td>
-                                    <button
-                                        className="btn btn-warning me-2"
-                                        onClick={() => navigate(`/proyectos/${project._id}/editar`)}
-                                    >
-                                        Actualizar
-                                    </button>
-                                    <button
-                                        className="btn btn-danger"
-                                        onClick={() => handleDelete(project)}
-                                    >
-                                        Eliminar
-                                    </button>
+                                    <span className={`badge 
+                                        ${project.status === 'Pendiente' ? 'bg-warning text-dark' :
+                                        project.status === 'En Proceso' ? 'bg-primary' :
+                                        project.status === 'Completado' ? 'bg-success' :
+                                        project.status === 'Suspendido' ? 'bg-secondary' :
+                                        project.status === 'Cancelado' ? 'bg-danger' : 'bg-light text-dark'
+                                        }`}>
+                                        {project.status}
+                                    </span>
                                 </td>
+                                <td>
+                                    <Button
+                                    variant="warning"
+                                    size="sm"
+                                    className="me-2"
+                                    onClick={() => navigate(`/proyectos/${project._id}/editar`)}
+                                    >
+                                    Actualizar
+                                    </Button>
+                                    <Button
+                                    variant="danger"
+                                    size="sm"
+                                    onClick={() => handleDelete(project)}
+                                    >
+                                    Eliminar
+                                    </Button>
+                                </td>
+                                </tr>
+                            ))
+                            ) : (
+                            <tr>
+                                <td colSpan="4" className="text-center">No hay proyectos disponibles.</td>
                             </tr>
-                        ))}
-                    </tbody>
-                </table>
+                            )}
+                        </tbody>
+                        </Table>
+                    </div>
+                    
+                    {projects.length > 0 && (
+                        <div className="d-flex justify-content-center mt-4">
+                            <nav>
+                            <ul className="pagination">
+                                <li className={`page-item ${paginaActual === 1 ? 'disabled' : ''}`}>
+                                <button className="page-link" onClick={() => setPaginaActual(paginaActual - 1)}>
+                                    Anterior
+                                </button>
+                                </li>
 
-                <div className="mt-4 d-flex justify-content-between">
-                    <button
-                        className="btn btn-primary"
-                        onClick={() => navigate('/proyectos/agregar')}
-                    >
-                        Agregar Proyecto
-                    </button>
+                                {Array.from({ length: Math.ceil(projects.length / proyectosPorPagina) }, (_, i) => (
+                                <li key={i} className={`page-item ${paginaActual === i + 1 ? 'active' : ''}`}>
+                                    <button className="page-link" onClick={() => setPaginaActual(i + 1)}>
+                                    {i + 1}
+                                    </button>
+                                </li>
+                                ))}
 
-                    <button className="btn btn-outline-dark" onClick={() => navigate('/proyectos-admin')}>
-                        Regresar
-                    </button>
-                </div>
+                                <li className={`page-item ${paginaActual === Math.ceil(projects.length / proyectosPorPagina) ? 'disabled' : ''}`}>
+                                <button className="page-link" onClick={() => setPaginaActual(paginaActual + 1)}>
+                                    Siguiente
+                                </button>
+                                </li>
+                            </ul>
+                            </nav>
+                        </div>
+                    )}
+                </Card>
 
                 {/* Modal de Confirmación de Eliminación */}
                 <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>

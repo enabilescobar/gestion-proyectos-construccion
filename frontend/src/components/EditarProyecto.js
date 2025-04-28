@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Modal, Button, Table } from 'react-bootstrap';
+import { Modal, Button, Table, Card } from 'react-bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 const EditarProyecto = () => {
@@ -173,288 +173,308 @@ const EditarProyecto = () => {
                 <h2 className="text-center mb-4">Editar Proyecto</h2>
                 {message && <div className="alert alert-info">{message}</div>}
 
-                <form onSubmit={handleEditProyecto} className="mb-4">
-                    <div className="mb-3">
+                <Card className="shadow-sm p-4 mb-5">
+                <h4 className="mb-4 text-center">Información del Proyecto</h4>
+                <form onSubmit={handleEditProyecto}>
+                    <div className="row">
+                    <div className="mb-3 col-md-6">
                         <label>Nombre del Proyecto</label>
                         <input
-                            type="text"
-                            className="form-control"
-                            value={proyecto.nombreProyecto}
-                            onChange={(e) => setProyecto({ ...proyecto, nombreProyecto: e.target.value })}
-                            required
+                        type="text"
+                        className="form-control"
+                        value={proyecto.nombreProyecto}
+                        onChange={(e) => setProyecto({ ...proyecto, nombreProyecto: e.target.value })}
+                        required
                         />
                     </div>
-                    <div className="mb-3">
-                        <label>Descripción</label>
-                        <textarea
-                            className="form-control"
-                            value={proyecto.descripcion}
-                            onChange={(e) => setProyecto({ ...proyecto, descripcion: e.target.value })}
-                            required
-                        />
-                    </div>
-                    <div className="mb-3 row">
-                        <div className="col-md-6">
-                            <label>Fecha de Inicio</label>
-                            <input
-                                type="date"
-                                className="form-control"
-                                value={proyecto.fechaInicio}
-                                onChange={(e) => setProyecto({ ...proyecto, fechaInicio: e.target.value })}
-                                required
-                            />
-                        </div>
-                        <div className="col-md-6">
-                            <label>Fecha de Fin</label>
-                            <input
-                                type="date"
-                                className="form-control"
-                                value={proyecto.fechaFin}
-                                onChange={(e) => setProyecto({ ...proyecto, fechaFin: e.target.value })}
-                            />
-                        </div>
-                    </div>
-                    <div className="mb-3">
+                    <div className="mb-3 col-md-6">
                         <label>Presupuesto</label>
                         <input
-                            type="number"
-                            className="form-control"
-                            value={proyecto.presupuesto}
-                            onChange={(e) => setProyecto({ ...proyecto, presupuesto: e.target.value })}
-                            required
+                        type="number"
+                        className="form-control"
+                        value={proyecto.presupuesto}
+                        onChange={(e) => setProyecto({ ...proyecto, presupuesto: e.target.value })}
+                        required
                         />
                     </div>
+                    </div>
 
                     <div className="mb-3">
+                    <label>Descripción</label>
+                    <textarea
+                        className="form-control"
+                        value={proyecto.descripcion}
+                        onChange={(e) => setProyecto({ ...proyecto, descripcion: e.target.value })}
+                        required
+                    />
+                    </div>
+
+                    <div className="row">
+                    <div className="mb-3 col-md-6">
+                        <label>Fecha de Inicio</label>
+                        <input
+                        type="date"
+                        className="form-control"
+                        value={proyecto.fechaInicio}
+                        onChange={(e) => setProyecto({ ...proyecto, fechaInicio: e.target.value })}
+                        required
+                        />
+                    </div>
+                    <div className="mb-3 col-md-6">
+                        <label>Fecha de Fin</label>
+                        <input
+                        type="date"
+                        className="form-control"
+                        value={proyecto.fechaFin}
+                        onChange={(e) => setProyecto({ ...proyecto, fechaFin: e.target.value })}
+                        />
+                    </div>
+                    </div>
+
+                    <div className="row">
+                    <div className="mb-3 col-md-6">
                         <label>Prioridad</label>
                         <select
-                            className="form-control"
-                            value={proyecto.prioridad}
-                            onChange={(e) => setProyecto({ ...proyecto, prioridad: e.target.value })}
-                            required
+                        className="form-control"
+                        value={proyecto.prioridad}
+                        onChange={(e) => setProyecto({ ...proyecto, prioridad: e.target.value })}
+                        required
                         >
-                            <option value="Alta">Alta</option>
-                            <option value="Media">Media</option>
-                            <option value="Baja">Baja</option>
+                        <option value="Alta">Alta</option>
+                        <option value="Media">Media</option>
+                        <option value="Baja">Baja</option>
                         </select>
                     </div>
 
-                    <div className="mb-3">
+                    <div className="mb-3 col-md-6">
                         <label>Divisa</label>
                         <select
-                            className="form-control"
-                            value={proyecto.divisa}
-                            onChange={(e) => setProyecto({ ...proyecto, divisa: e.target.value })}
-                            required
+                        className="form-control"
+                        value={proyecto.divisa}
+                        onChange={(e) => setProyecto({ ...proyecto, divisa: e.target.value })}
+                        required
                         >
-                            <option value="LPS">Lempiras (LPS)</option>
-                            <option value="USD">Dólares (USD)</option>
+                        <option value="LPS">Lempiras (LPS)</option>
+                        <option value="USD">Dólares (USD)</option>
                         </select>
                     </div>
+                    </div>
+
                     <div className="mb-3">
-                        <label>Estado del Proyecto</label>
-                        <select
-                            className="form-control"
-                            value={proyecto.status}
-                            onChange={(e) => setProyecto({ ...proyecto, status: e.target.value })}
-                        >
-                            <option value="Pendiente">Pendiente</option>
-                            <option value="En Proceso">En Proceso</option>
-                            <option value="Completado">Completado</option>
-                            <option value="Suspendido">Suspendido</option>
-                            <option value="Cancelado">Cancelado</option>
-                        </select>
+                    <label>Estado del Proyecto</label>
+                    <select
+                        className="form-control"
+                        value={proyecto.status}
+                        onChange={(e) => setProyecto({ ...proyecto, status: e.target.value })}
+                    >
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="En Proceso">En Proceso</option>
+                        <option value="Completado">Completado</option>
+                        <option value="Suspendido">Suspendido</option>
+                        <option value="Cancelado">Cancelado</option>
+                    </select>
                     </div>
+
                     <div className="mb-3">
-                        <label>Seleccionar Encargado (Manager)</label>
-                        <select
-                            className="form-control"
-                            value={proyecto.encargado?._id || ''}  
-                            onChange={(e) => {
-                                const selectedManager = managers.find(m => m._id === e.target.value);
-                                setProyecto({ ...proyecto, encargado: selectedManager });
-                            }}
-                            required
-                        >
-                            <option value="">Selecciona un Encargado</option>
-                            {managers.map(manager => (
-                                <option key={manager._id} value={manager._id}>
-                                    {manager.username}
-                                </option>
-                            ))}
-                        </select>
+                    <label>Seleccionar Encargado (Manager)</label>
+                    <select
+                        className="form-control"
+                        value={proyecto.encargado?._id || ''}
+                        onChange={(e) => {
+                        const selectedManager = managers.find(m => m._id === e.target.value);
+                        setProyecto({ ...proyecto, encargado: selectedManager });
+                        }}
+                        required
+                    >
+                        <option value="">Selecciona un Encargado</option>
+                        {managers.map(manager => (
+                        <option key={manager._id} value={manager._id}>
+                            {manager.username}
+                        </option>
+                        ))}
+                    </select>
                     </div>
+
                     <div className="mb-3">
-                        <label>Seleccionar Usuarios (Equipo de trabajo)</label>
-                        <select
-                            className="form-control mb-2"
-                            onChange={(e) => {
-                                const selectedUser = usuarios.find(user => user._id === e.target.value);
-                                if (selectedUser) {
-                                    setProyecto({
-                                        ...proyecto,
-                                        equipoTrabajo: [...proyecto.equipoTrabajo, selectedUser], // ✅ Guardamos el objeto
-                                    });
-                                }
-                            }}
-                        >
-                            <option value="">Selecciona un Usuario</option>
-                            {usuarios.map(user => (
-                                <option key={user._id} value={user._id}>
-                                    {user.username}
-                                </option>
-                            ))}
-                        </select>
-                        <ul className="list-group">
-                            {proyecto.equipoTrabajo.map(user => (
-                                <li key={user._id} className="list-group-item d-flex justify-content-between">
-                                    {user.username}     
-                                    <button
-                                        type="button"
-                                        className="btn btn-danger btn-sm"
-                                        onClick={() => setProyecto({
-                                            ...proyecto,
-                                            equipoTrabajo: proyecto.equipoTrabajo.filter(u => u._id !== user._id),
-                                        })}
-                                    >
-                                        Quitar
-                                    </button>
-                                </li>
-                            ))}
-                        </ul>
+                    <label>Seleccionar Usuarios (Equipo de Trabajo)</label>
+                    <select
+                        className="form-control mb-2"
+                        onChange={(e) => {
+                        const selectedUser = usuarios.find(user => user._id === e.target.value);
+                        if (selectedUser) {
+                            setProyecto({
+                            ...proyecto,
+                            equipoTrabajo: [...proyecto.equipoTrabajo, selectedUser],
+                            });
+                        }
+                        }}
+                    >
+                        <option value="">Selecciona un Usuario</option>
+                        {usuarios.map(user => (
+                        <option key={user._id} value={user._id}>
+                            {user.username}
+                        </option>
+                        ))}
+                    </select>
+                    <ul className="list-group">
+                        {proyecto.equipoTrabajo.map(user => (
+                        <li key={user._id} className="list-group-item d-flex justify-content-between align-items-center">
+                            {user.username}
+                            <button
+                            type="button"
+                            className="btn btn-danger btn-sm"
+                            onClick={() => setProyecto({
+                                ...proyecto,
+                                equipoTrabajo: proyecto.equipoTrabajo.filter(u => u._id !== user._id),
+                            })}
+                            >
+                            Quitar
+                            </button>
+                        </li>
+                        ))}
+                    </ul>
                     </div>
-                    <button className="btn btn-secondary mb-3"type="submit">
+
+                    <div className="text-center mt-4">
+                    <Button type="submit" variant="primary" className="px-5 py-2">
                         Guardar Cambios
-                    </button>
+                    </Button>
+                    </div>
                 </form>
+                </Card>
 
                 {/* Tareas y Gastos: Mantienen su funcionalidad */}
-                <h4>Tareas</h4>
-                <button
-                    className="btn btn-success mb-3"
-                    onClick={() => navigate(`/proyectos/${id}/agregar-tarea`)}
-                >
+                <Card className="shadow-sm p-4 mb-5">
+                <div className="d-flex justify-content-between align-items-center mb-4">
+                    <h4 className="mb-0">Tareas</h4>
+                    <Button variant="success" onClick={() => navigate(`/proyectos/${id}/agregar-tarea`)}>
                     Agregar Tarea
-                </button>
-                <Table striped bordered hover className="table table-bordered mb-4">
-                    <thead>
-                        <tr>
-                            <th>Título</th>
-                            <th>Descripción</th>
-                            <th>Estado</th>
-                            <th>Dependencias</th>
-                            <th>Acciones</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {tareas.map((tarea) => (
-                            <tr key={tarea._id}>
-                                <td>{tarea.title}</td>
-                                <td>{tarea.description}</td>
-                                <td>{tarea.status}</td>
-                                <td>
-                                    {tarea.dependencias && tarea.dependencias.length > 0 ? (
-                                        <ul className="list-unstyled mb-0">
-                                            {tarea.dependencias.map(dep => (
-                                                <li key={dep._id}>{dep.title}</li>
-                                            ))}
-                                        </ul>
-                                    ) : (
-                                        <span className="text-muted">Sin dependencias</span>
-                                    )}
-                                </td>
-                                <td>
-                                    <button className="btn btn-warning me-2" onClick={() => handleEdit(tarea, true)}>
-                                        Editar
-                                    </button>
-                                    <button className="btn btn-danger" onClick={() => handleDelete(tarea, true)}>
-                                        Eliminar
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </Table>
+                    </Button>
+                </div>
 
-                <h4>Gastos</h4>
-                <button
-                    className="btn btn-success mb-3"
-                    onClick={() => navigate(`/proyectos/${id}/agregar-gasto`)}
-                >
-                    Agregar Gasto
-                </button>
-                <Table striped bordered hover className="table table-bordered mb-4">
-                    <thead>
-                        <tr>
-                            <th>Categoría</th>
-                            <th>Descripción</th>
-                            <th>Monto</th>
-                            <th>Realizado por</th>
-                            <th>Fecha</th>
-                            <th>Archivos Adjuntos</th>
-                            <th>Acciones</th>
-                        </tr>
+                <Table responsive hover borderless className="align-middle">
+                    <thead className="table-light">
+                    <tr>
+                        <th>Título</th>
+                        <th>Descripción</th>
+                        <th>Estado</th>
+                        <th>Dependencias</th>
+                        <th>Acciones</th>
+                    </tr>
                     </thead>
                     <tbody>
-                        {gastos.map((gasto) => (
-                            <tr key={gasto._id}>
-                                <td>{gasto.category}</td>
-                                <td>{gasto.description}</td>
-                                <td>{gasto.amount}</td>
-                                <td>{gasto.doneBy}</td>
-                                <td>{gasto.date ? new Date(gasto.date).toISOString().split('T')[0] : ''}</td>
-                                <td>
-                                    {gasto.facturas?.length > 0 ? (
-                                        <button
-                                            className="btn btn-link"
-                                            onClick={() => handleViewFacturas(gasto.facturas)}
-                                        >
-                                            Ver ({gasto.facturas.length})
-                                        </button>
-                                    ) : (
-                                        'No hay archivos'
-                                    )}
-                                </td>
-                                <td>
-                                    <button className="btn btn-warning me-2" onClick={() => handleEdit(gasto, false)}>
-                                        Editar
-                                    </button>
-                                    <button className="btn btn-danger" onClick={() => handleDelete(gasto, false)}>
-                                        Eliminar
-                                    </button>
-                                </td>
-                            </tr>
-                        ))}
+                    {tareas.map((tarea) => (
+                        <tr key={tarea._id}>
+                        <td>{tarea.title}</td>
+                        <td>{tarea.description}</td>
+                        <td>{tarea.status}</td>
+                        <td>
+                            {tarea.dependencias && tarea.dependencias.length > 0 ? (
+                            <ul className="list-unstyled mb-0">
+                                {tarea.dependencias.map(dep => (
+                                <li key={dep._id}>{dep.title}</li>
+                                ))}
+                            </ul>
+                            ) : (
+                            <span className="text-muted">Sin dependencias</span>
+                            )}
+                        </td>
+                        <td>
+                            <Button size="sm" variant="warning" className="me-2" onClick={() => handleEdit(tarea, true)}>
+                            Editar
+                            </Button>
+                            <Button size="sm" variant="danger" onClick={() => handleDelete(tarea, true)}>
+                            Eliminar
+                            </Button>
+                        </td>
+                        </tr>
+                    ))}
                     </tbody>
                 </Table>
+                </Card>
+
+                <Card className="shadow-sm p-4 mb-5">
+                <div className="d-flex justify-content-between align-items-center mb-4">
+                    <h4 className="mb-0">Gastos</h4>
+                    <Button variant="success" onClick={() => navigate(`/proyectos/${id}/agregar-gasto`)}>
+                    Agregar Gasto
+                    </Button>
+                </div>
+
+                <Table responsive hover borderless className="align-middle">
+                    <thead className="table-light">
+                    <tr>
+                        <th>Categoría</th>
+                        <th>Descripción</th>
+                        <th>Monto</th>
+                        <th>Realizado por</th>
+                        <th>Fecha</th>
+                        <th>Archivos Adjuntos</th>
+                        <th>Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {gastos.map((gasto) => (
+                        <tr key={gasto._id}>
+                        <td>{gasto.category}</td>
+                        <td>{gasto.description}</td>
+                        <td>{gasto.amount}</td>
+                        <td>{gasto.doneBy}</td>
+                        <td>{gasto.date ? new Date(gasto.date).toISOString().split('T')[0] : ''}</td>
+                        <td>
+                            {gasto.facturas?.length > 0 ? (
+                            <Button variant="link" size="sm" onClick={() => handleViewFacturas(gasto.facturas)}>
+                                Ver ({gasto.facturas.length})
+                            </Button>
+                            ) : (
+                            <span className="text-muted">No hay archivos</span>
+                            )}
+                        </td>
+                        <td>
+                            <Button size="sm" variant="warning" className="me-2" onClick={() => handleEdit(gasto, false)}>
+                            Editar
+                            </Button>
+                            <Button size="sm" variant="danger" onClick={() => handleDelete(gasto, false)}>
+                            Eliminar
+                            </Button>
+                        </td>
+                        </tr>
+                    ))}
+                    </tbody>
+                </Table>
+                </Card>
 
                 {/* Modales */}
-                <Modal show={showFacturasModal} onHide={() => setShowFacturasModal(false)}>
+                <Modal show={showFacturasModal} onHide={() => setShowFacturasModal(false)} centered>
                     <Modal.Header closeButton>
                         <Modal.Title>Archivos Adjuntos</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
-                        {facturas.map((factura) => (
-                            <div key={factura._id}>
-                                <a
-                                    href={`http://localhost:5000/${factura.ruta}`}
-                                    download={factura.nombre} // Forzar la descarga
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                >
-                                    {factura.nombre}
-                                </a>
+                        {facturas.length > 0 ? (
+                        facturas.map((factura) => (
+                            <div key={factura._id} className="mb-2">
+                            <a
+                                href={`http://localhost:5000/${factura.ruta}`}
+                                download={factura.nombre}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                            >
+                                {factura.nombre}
+                            </a>
                             </div>
-                        ))}
+                        ))
+                        ) : (
+                        <p className="text-muted">No hay archivos disponibles.</p>
+                        )}
                     </Modal.Body>
                     <Modal.Footer>
                         <Button variant="secondary" onClick={() => setShowFacturasModal(false)}>
-                            Cerrar
+                        Cerrar
                         </Button>
                     </Modal.Footer>
                 </Modal>
 
-                <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)}>
+                <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
                     <Modal.Header closeButton>
                         <Modal.Title>Confirmar Eliminación</Modal.Title>
                     </Modal.Header>
@@ -462,22 +482,26 @@ const EditarProyecto = () => {
                         ¿Está seguro de que desea eliminar este {isDeletingTask ? 'tarea' : 'gasto'}?
                     </Modal.Body>
                     <Modal.Footer>
-                        <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>Cancelar</Button>
-                        <Button variant="danger" onClick={confirmDelete}>Aceptar</Button>
+                        <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+                        Cancelar
+                        </Button>
+                        <Button variant="danger" onClick={confirmDelete}>
+                        Eliminar
+                        </Button>
                     </Modal.Footer>
                 </Modal>
 
                 {/* Modal para mostrar dependencias*/}
-                <Modal show={showDependencyModal} onHide={() => setShowDependencyModal(false)}>
+                <Modal show={showDependencyModal} onHide={() => setShowDependencyModal(false)} centered>
                     <Modal.Header closeButton>
-                        <Modal.Title>No se puede eliminar la tarea</Modal.Title>
+                        <Modal.Title>No se puede eliminar</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
                         {dependencyMessage}
                     </Modal.Body>
                     <Modal.Footer>
                         <Button variant="secondary" onClick={() => setShowDependencyModal(false)}>
-                            Cerrar
+                        Cerrar
                         </Button>
                     </Modal.Footer>
                 </Modal>
